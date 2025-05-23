@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\4.Infrastructure\Infrastructure.Connectivity\Infrastructure.Connectivity.csproj" />
+    <ProjectReference Include="..\..\5.Crosscutting\Crosscutting\Crosscutting.csproj" />
+    <ProjectReference Include="..\Application.Dto\Application.Dto.csproj" />
+  </ItemGroup>
+
+</Project>

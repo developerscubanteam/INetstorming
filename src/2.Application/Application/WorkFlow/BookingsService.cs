@@ -34,7 +34,7 @@ namespace Application.WorkFlow
             catch (Exception ex)
             {
                 var error = new Domain.Error.Error("UncontrolledException", ex.GetFullMessage(), ErrorType.Error, CategoryErrorType.Provider);
-                bookings.Errors = new List<Domain.Error.Error> { error };
+                bookings.Errors = [error];
             }
             return bookings;
         }
@@ -47,7 +47,7 @@ namespace Application.WorkFlow
                 Url = connection.Url,
                 User = connection.User,
                 Password = connection.Password,
-
+                Actor = connection.Actor,
             };
             var connectorQuery = new BookingsConnectorQuery()
             {

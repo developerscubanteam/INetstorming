@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Application.Dto.Common
+﻿namespace Application.Dto.Common
 {
     public enum RateType { Net = 1, Commissionable = 2 }
     public class ExternalSupplier
@@ -18,7 +13,8 @@ namespace Application.Dto.Common
             {
                 Url = Connection["Url"],
                 User = Connection["User"],
-                Password = Connection["Password"]
+                Password = Connection["Password"],
+                Actor = Connection["Actor"]
             };
             return connection;
         }

@@ -24,7 +24,7 @@ namespace Application.WorkFlow
         }
 
         private async Task<Booking> CallConnector(BookingCancelQuery query)
-        {   
+        {
             var booking = new Booking();
             try
             {
@@ -34,7 +34,7 @@ namespace Application.WorkFlow
             catch (Exception ex)
             {
                 var error = new Domain.Error.Error("UncontrolledException", ex.GetFullMessage(), ErrorType.Error, CategoryErrorType.Provider);
-                booking.Errors = new List<Domain.Error.Error> { error };
+                booking.Errors = [error];
             }
             return booking;
         }
@@ -44,9 +44,10 @@ namespace Application.WorkFlow
             var connection = query.ExternalSupplier.GetConnection();
             var connectionData = new ConnectionData()
             {
-                Url = connection.Url,                
+                Url = connection.Url,
                 User = connection.User,
-                Password = connection.Password
+                Password = connection.Password,
+                Actor = connection.Actor,
             };
 
             var connectorQuery = new BookingCancelConnectorQuery()

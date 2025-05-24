@@ -7,8 +7,6 @@ using Application.Dto.ValuationService;
 using Domain.Availability;
 using Domain.Booking;
 using Domain.Valuation;
-
-using Microsoft.VisualStudio.TestPlatform.TestHost;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -29,7 +27,7 @@ namespace Ijuniper.test
         [SetUp]
         public void Setup()
         {
-            var application = new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program>();            
+            var application = new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program>();
             _client = application.CreateClient();
         }
 
@@ -46,7 +44,10 @@ namespace Ijuniper.test
                     Code = "IJuniper",
                     Connection = new System.Collections.Generic.Dictionary<string, string>()
                     {
-                        
+                        {"Url", "https://test.netstorming.net/kalima/call.php" },
+                        {"User", "xmlusers" },
+                        {"Password", "methabookxml" },
+                        {"Actor", "METHABOOK" }
                     }
                     ,
                     Params = new System.Collections.Generic.Dictionary<string, string>()
@@ -56,18 +57,18 @@ namespace Ijuniper.test
                 },
                 SearchCriteria = new SearchCriteria()
                 {
-                    AccommodationCodes = new List<string>() {
+                    AccommodationCodes = [
                         "hot"
 
-                     },
+                     ],
                     CheckIn = new DateTime(2024, 12, 06),
                     CheckOut = new DateTime(2024, 12, 11),
                     Currency = "EUR",
                     Nationality = "ES",
                     Language = "es",
-                    RoomCandidates = new List<Application.Dto.AvailabilityService.Room>() {
+                    RoomCandidates = [
                          new Application.Dto.AvailabilityService.Room(){
-                             PaxesAge = new List<byte>(){ 20},
+                             PaxesAge = [20],
                              RoomRefId = 1
                          },
                          //new Application.Dto.AvailabilityService.Room(){
@@ -82,7 +83,7 @@ namespace Ijuniper.test
                          //    PaxesAge = new List<byte>(){ 40,50},
                          //    RoomRefId = 4
                          //},
-                     }
+                     ]
                 },
                 Timeout = 100000,
                 AuditRequests = true,
@@ -105,7 +106,7 @@ namespace Ijuniper.test
             request.Content = new StringContent(Serializar(query), Encoding.UTF8, "application/json");
             HttpResponseMessage response = await _client.SendAsync(request);
             string responseString = await response.Content.ReadAsStringAsync();
-           // responseString = responseString.Replace("\"", "");
+            // responseString = responseString.Replace("\"", "");
             Availability trueObject = Deserializar<Availability>(responseString);
             Assert.IsNotNull(trueObject.Accommodations);
 
@@ -195,18 +196,18 @@ namespace Ijuniper.test
                 ,
                 Locator = "Test" + DateTime.Now.Ticks.ToString()
                 ,
-                Rooms = new List<Application.Dto.BookingCreateService.Room>()
-                {
+                Rooms =
+                [
                      new Application.Dto.BookingCreateService.Room(){
-                        Paxes = new List<Application.Dto.BookingCreateService.Pax>(){
+                        Paxes = [
                             new Pax(){ Id = 1,Name = "Test", Surname = "Test", Age = 20, Title="Mr", Email = "test@test.test"},
                             new Pax(){ Id = 2,Name = "Test1", Surname = "Test1", Age = 23, Title="Mr",  Email = "test@test.test"}
-                        },
+                        ],
 
                 },
 
 
-                },
+                ],
                 Holder = new Pax() { Id = 1, Name = "Nino", Surname = "rac" },
                 Include = new Dictionary<string, List<string>>()
                 {
@@ -323,7 +324,7 @@ namespace Ijuniper.test
             Assert.IsNotNull(booktrueObject.BookingList);
         }
 
-       
+
 
         private HttpRequestMessage GetRequest(string method, string apikey, HttpMethod Hmethod = null)
         {

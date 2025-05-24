@@ -5,7 +5,6 @@ using Domain.Booking;
 using Domain.Common;
 using Domain.Error;
 using Domain.ValuationCode;
-using Infrastructure.Connectivity.Connector.Models.Message.ValuationRS;
 using Infrastructure.Connectivity.Contracts;
 using Infrastructure.Connectivity.Queries;
 using Infrastructure.Connectivity.Queries.Base;
@@ -31,7 +30,7 @@ namespace Application.WorkFlow
             var bc = FlowCodeServices.DecodeBookingCode(query.BookingCode);
             var booking = new Booking();
             try
-            {             
+            {
 
                 var bookingRS = await _connector.CreateBooking(ConvertToConnectoryQuery(query, bc));
                 BookingResponseService.ToDto(query.Include, booking, bookingRS);
@@ -39,7 +38,7 @@ namespace Application.WorkFlow
             catch (Exception ex)
             {
                 var error = new Domain.Error.Error("UncontrolledException", ex.GetFullMessage(), ErrorType.Error, CategoryErrorType.Provider);
-                booking.Errors = new List<Domain.Error.Error> { error };
+                booking.Errors = [error];
 
             }
             return booking;
@@ -52,13 +51,14 @@ namespace Application.WorkFlow
             {
                 Url = connection.Url,
                 User = connection.User,
-                Password = connection.Password
+                Password = connection.Password,
+                Actor = connection.Actor,
             };
 
             var connectorQuery = new ValuationConnectorQuery()
             {
                 AdvancedOptions = new VAConnectorAdvancedOptions()
-                { 
+                {
                     ShowBreakdownPrice = false
                 },
                 ConnectionData = connectionData,
@@ -75,7 +75,8 @@ namespace Application.WorkFlow
             {
                 Url = connection.Url,
                 User = connection.User,
-                Password = connection.Password
+                Password = connection.Password,
+                Actor = connection.Actor,
             };
 
             var vc = FlowCodeServices.DecodeValuationCode(bookingCode.ValuationCode);
@@ -139,7 +140,7 @@ namespace Application.WorkFlow
                 return new Infrastructure.Connectivity.Queries.Tolerance()
                 {
                     Value = tolerance.Value,
-                    Type = tolerance.Type == Dto.BookingCreateService.ToleranceType.Amount ? Infrastructure.Connectivity.Queries.ToleranceType.Amount 
+                    Type = tolerance.Type == Dto.BookingCreateService.ToleranceType.Amount ? Infrastructure.Connectivity.Queries.ToleranceType.Amount
                                                                                            : Infrastructure.Connectivity.Queries.ToleranceType.Percentage
                 };
             }
@@ -185,8 +186,10 @@ namespace Application.WorkFlow
 
         private Booking ThrowErrorRegenerationBookingCode(List<Domain.Error.Error>? errors, AuditData? auditData)
         {
-            var booking = new Booking();
-            booking.Errors = errors;
+            var booking = new Booking
+            {
+                Errors = errors
+            };
 
             if (auditData != null)
                 booking.AuditData = auditData;

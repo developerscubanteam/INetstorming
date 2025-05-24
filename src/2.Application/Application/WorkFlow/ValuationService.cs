@@ -3,7 +3,6 @@ using Application.WorkFlow.Contracts;
 using Application.WorkFlow.Services;
 using Domain.Common;
 using Domain.Common.MinimumPrice;
-using Domain.Error;
 using Domain.Valuation;
 using Domain.ValuationCode;
 using Infrastructure.Connectivity.Connector.Models.Message.ValuationRS;
@@ -44,8 +43,9 @@ namespace Application.WorkFlow
             catch (Exception ex)
             {
                 var error = new Domain.Error.Error("UncontrolledException", ex.GetFullMessage(), Domain.Error.ErrorType.Error, Domain.Error.CategoryErrorType.Provider);
-                valuation.Errors = new List<Domain.Error.Error> { error };
-            };
+                valuation.Errors = [error];
+            }
+            ;
             return valuation;
 
         }
@@ -57,7 +57,8 @@ namespace Application.WorkFlow
             {
                 Url = connection.Url,
                 User = connection.User,
-                Password = connection.Password
+                Password = connection.Password,
+                Actor = connection.Actor,
             };
 
             var connectorQuery = new ValuationConnectorQuery()
@@ -80,8 +81,10 @@ namespace Application.WorkFlow
 
         private Valuation ToDto((ValuationRS? HotelBookingRulesRS, List<Domain.Error.Error>? Errors, AuditData AuditData) valuationRS, ValuationCode vc, ValuationQuery query)
         {
-            var result = new Valuation();
-            result.AuditData = valuationRS.AuditData;
+            var result = new Valuation
+            {
+                AuditData = valuationRS.AuditData
+            };
 
             if (valuationRS.Errors != null && valuationRS.Errors.Any())
                 result.Errors = valuationRS.Errors;
@@ -258,7 +261,7 @@ namespace Application.WorkFlow
             if (IncludeService.CheckIfIsIncluded(include, Prices.intance, Prices.Empty.intance))
             {
                 // TODO: Fill Price
-                return PriceService.GetPrice(default, default, default, default, null);                
+                return PriceService.GetPrice(default, default, default, default, null);
             }
 
             return null;
@@ -269,7 +272,7 @@ namespace Application.WorkFlow
             // TODO: Fill MinimumPrice
             if (IncludeService.CheckIfIsIncluded(include, Prices.intance, Prices.Empty.intance))
             {
-                
+
                 return GetMinimumPrice(0, "");
 
             }
@@ -298,7 +301,7 @@ namespace Application.WorkFlow
         {
             if (IncludeService.CheckIfIsIncluded(include, Fees.intance, Fees.Empty.intance))
             {
-               
+
                 var fees = new List<Fee>();
                 // TODO: Fill Fees
 

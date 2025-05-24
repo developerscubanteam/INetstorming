@@ -1,18 +1,14 @@
 ﻿using Application.Dto.AvailabilityService;
 using Application.WorkFlow.Contracts;
+using Application.WorkFlow.Services;
+using Domain.Availability;
+using Domain.Common;
+using Domain.Common.MinimumPrice;
 using Infrastructure.Connectivity.Contracts;
 using Infrastructure.Connectivity.Queries;
 using Infrastructure.Connectivity.Queries.Base;
-using AvailabilityRS = Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS.AvailabilityRS;
-using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS;
-using Application.WorkFlow.Services;
-using Domain.Common.MinimumPrice;
-using Infrastructure.Connectivity.Connector.Models.Message.Common;
 using System.Text;
-using Domain.Availability;
-using Domain.Common;
-using Infrastructure.Connectivity.Connector.Models;
-using CultureInfo = System.Globalization.CultureInfo;
+using AvailabilityRS = Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS.AvailabilityRS;
 
 namespace Application.WorkFlow
 {
@@ -35,7 +31,7 @@ namespace Application.WorkFlow
         public async Task<Availability> GetAvailability(AvailabilityQuery query)
         {
             var availabilities = await _connector.Availability(ConvertToConnectoryQuery(query));
-            return ToDto(query, availabilities);            
+            return ToDto(query, availabilities);
         }
 
         private AvailabilityConnectorQuery ConvertToConnectoryQuery(AvailabilityQuery query)
@@ -68,38 +64,41 @@ namespace Application.WorkFlow
             };
 
 
-            var connectorQuery = new AvailabilityConnectorQuery()
+            var connectorQuery = new AvailabilityConnectorQuery
             {
                 SearchCriteria = searchCriteria,
                 ConnectionData = new ConnectionData()
                 {
                     Url = connection.Url,
                     User = connection.User,
-                    Password = connection.Password
+                    Password = connection.Password,
+                    Actor = connection.Actor,
                 },
                 AdvancedOptions = new AvConnectorAdvancedOptions()
                 {
                     ShowBreakdownPrice = GetShowPriceBreakDown(query.Include),
                     ShowCancellationPolicies = GetShowCancellationPolicies(query.Include),
                     ShowHotelInfo = GetShowHotelInfo(query.Include)
-                }
+                },
+                AuditRequests = query.AuditRequests,
+                Timeout = query.Timeout
             };
-            connectorQuery.AuditRequests = query.AuditRequests;
-            connectorQuery.Timeout = query.Timeout;
             return connectorQuery;
         }
 
         private Availability ToDto(AvailabilityQuery query, (AvailabilityRS? AvailabilityRs, List<Domain.Error.Error>? Errors, AuditData AuditData) Availabilities)
         {
-            var availability = new Availability();
-            availability.AuditData = Availabilities.AuditData;
+            var availability = new Availability
+            {
+                AuditData = Availabilities.AuditData
+            };
 
             if (Availabilities.Errors != null && Availabilities.Errors.Any())
-                availability.Errors = Availabilities.Errors;            
-            else            
+                availability.Errors = Availabilities.Errors;
+            else
                 availability.Accommodations = WithResults(query, Availabilities.AvailabilityRs);
 
-            return availability;            
+            return availability;
         }
 
         private List<Accommodation> WithResults(AvailabilityQuery query, AvailabilityRS? AvailabilityRs)
@@ -111,38 +110,40 @@ namespace Application.WorkFlow
             {
                 //foreach (var hotelResult in AvailabilityRs.availHotels)
                 //{
-                    var mealPlan = new Dictionary<string, GroupedByMealplan>();
-                    //foreach (var hotelOption in hotelResult.availRoomRates)
-                    //{
-                    //    if (!string.IsNullOrWhiteSpace(hotelOption.mealPlan))
-                    //    {
-                            var combination = new Combination();
-                            combination.PaymentType = GetPaymentType(default(string));
-                            combination.Status = StatusAvailability.Available;
-                            combination.NonRefundable = IsNotRefundable(default);
-                            combination.Rooms = GetRooms(query.Include, default);
-                            combination.Fees = GetFees(query.Include, default);
-                            combination.MinimumPrice = GetMinimumPrice(default);
-                            combination.Price = GetPrice(default(Object));
-                            combination.ValuationCode = GetValuationCode(vc, default);
-                            combination.CancellationPolicy = GetCancellationPolicy(query.Include, query.SearchCriteria.CheckIn, default);
-                            combination.RateConditions = GetRateConditions(query.Include, default);
-                            //if (hotelOption.AdditionalElements != null)
-                            //{
-                            //    combination.Remarks = GetRemarks(query.Include, hotelOption.AdditionalElements.HotelSupplements);
-                            //    combination.Promotions = GetPromotions(query.Include, hotelOption.AdditionalElements.HotelOffers);
-                            //}
+                var mealPlan = new Dictionary<string, GroupedByMealplan>();
+                //foreach (var hotelOption in hotelResult.availRoomRates)
+                //{
+                //    if (!string.IsNullOrWhiteSpace(hotelOption.mealPlan))
+                //    {
+                var combination = new Combination
+                {
+                    PaymentType = GetPaymentType(default(string)),
+                    Status = StatusAvailability.Available,
+                    NonRefundable = IsNotRefundable(default),
+                    Rooms = GetRooms(query.Include, default),
+                    Fees = GetFees(query.Include, default),
+                    MinimumPrice = GetMinimumPrice(default),
+                    Price = GetPrice(default(Object)),
+                    ValuationCode = GetValuationCode(vc, default),
+                    CancellationPolicy = GetCancellationPolicy(query.Include, query.SearchCriteria.CheckIn, default),
+                    RateConditions = GetRateConditions(query.Include, default)
+                };
+                //if (hotelOption.AdditionalElements != null)
+                //{
+                //    combination.Remarks = GetRemarks(query.Include, hotelOption.AdditionalElements.HotelSupplements);
+                //    combination.Promotions = GetPromotions(query.Include, hotelOption.AdditionalElements.HotelOffers);
+                //}
 
-                            AddMealplan(mealPlan, combination, "", query);
-                    //    }
-                    //}
-                    var accommodation = GetAccommodation(query.Include, default,default, mealPlan);
-                    if (accommodation.Mealplans != null && accommodation.Mealplans.Any())
-                        accommodations.Add(accommodation);
+                AddMealplan(mealPlan, combination, "", query);
+                //    }
+                //}
+                var accommodation = GetAccommodation(query.Include, default, default, mealPlan);
+                if (accommodation.Mealplans != null && accommodation.Mealplans.Any())
+                    accommodations.Add(accommodation);
                 //}
             }
             return accommodations;
-            
+
         }
 
         private IList<RateConditionType>? GetRateConditions(Dictionary<string, List<string>>? include, object value)
@@ -159,15 +160,18 @@ namespace Application.WorkFlow
 
                 if (result.Any())
                     return result;
-            };
+            }
+            ;
 
             return null;
         }
 
         private Accommodation GetAccommodation(Dictionary<string, List<string>>? include, string code, string? name, Dictionary<string, GroupedByMealplan> mealPlan)
         {
-            var accommodation = new Accommodation();
-            accommodation.Code = code;
+            var accommodation = new Accommodation
+            {
+                Code = code
+            };
 
             if (IncludeService.CheckIfIsIncluded(include, Accommodations.intance, Accommodations.Name.intance))
                 accommodation.Name = name;
@@ -181,31 +185,31 @@ namespace Application.WorkFlow
             if (paymentType == null)
                 return PaymentType.SupplierPayment;
 
-            if (paymentType!=null && paymentType == "")
+            if (paymentType != null && paymentType == "")
                 return PaymentType.PaymentAtDestination;
 
             return PaymentType.SupplierPayment;
         }
 
         private bool IsNotRefundable(object cancelpolicy)
-        {            
+        {
             return false;
         }
 
 
         private string GetValuationCode(StringBuilder vc, object data)
-        {         
+        {
 
             return FlowCodeServices.GetValuationCode(vc, data);
         }
 
-      
+
 
         private List<Domain.Common.Fee>? GetFees(Dictionary<string, List<string>>? include, object hotelOption)
         {
             if (IncludeService.CheckIfIsIncluded(include, Fees.intance, Fees.Empty.intance))
-            {                
-                var fees = new List<Domain.Common.Fee>();                
+            {
+                var fees = new List<Domain.Common.Fee>();
 
                 if (fees.Any())
                     return fees;
@@ -230,13 +234,17 @@ namespace Application.WorkFlow
         {
             var rooms = new List<Domain.Common.Room>();
 
-            for (var i = 0; i < 1; i++) { 
-                var room = new Domain.Common.Room() { RoomRefId = i + 1 };
-                room.Code = "";
+            for (var i = 0; i < 1; i++)
+            {
+                var room = new Domain.Common.Room
+                {
+                    RoomRefId = i + 1,
+                    Code = ""
+                };
                 if (IncludeService.CheckIfIsIncluded(include, Rooms.intance, Rooms.Occupancy.intance))
                     room.Occupancy = GetRoomOccupancy(hotelRooms);
                 rooms.Add(room);
-            }           
+            }
 
             return rooms;
         }
@@ -249,7 +257,7 @@ namespace Application.WorkFlow
                 {
                     Adults = 1,
                     Children = 1,
-                    AvailableRooms = 1,                   
+                    AvailableRooms = 1,
                 };
             }
             else
@@ -262,23 +270,25 @@ namespace Application.WorkFlow
             if (IncludeService.CheckIfIsIncluded(include, Cancellationpolicy.intance, Cancellationpolicy.Empty.intance))
             {
                 if (cancellationPolicy != null)
-                    return Services.CancellationPolicyService.GetCancellationPolicy(cancellationPolicy, 0,"", checkIn);
+                    return Services.CancellationPolicyService.GetCancellationPolicy(cancellationPolicy, 0, "", checkIn);
             }
             return null;
         }
 
-       
 
 
-        private IList<Domain.Availability.Mealplan> GetMealplans(Dictionary<string, List<string>>? include, 
+
+        private IList<Domain.Availability.Mealplan> GetMealplans(Dictionary<string, List<string>>? include,
             Dictionary<string, GroupedByMealplan> mealPlans)
         {
             var accommodationsMealplan = new List<Domain.Availability.Mealplan>();
             foreach (var mealplanKey in mealPlans.Keys)
             {
-                var mealplan = new Domain.Availability.Mealplan();
-                mealplan.Code = mealplanKey;
-                mealplan.Combinations = mealPlans[mealplanKey].Combinations;
+                var mealplan = new Domain.Availability.Mealplan
+                {
+                    Code = mealplanKey,
+                    Combinations = mealPlans[mealplanKey].Combinations
+                };
 
                 if (IncludeService.CheckIfIsIncluded(include, Mealplans.intance, Mealplans.Name.intance))
                     mealplan.Name = mealPlans[mealplanKey].Name;
@@ -297,7 +307,7 @@ namespace Application.WorkFlow
                     mealplans[board].Combinations.Add(combination);
                 else
                 {
-                    var groupedByMealplan = new GroupedByMealplan() { Name = board, Combinations = new List<Combination>() };
+                    var groupedByMealplan = new GroupedByMealplan() { Name = board, Combinations = [] };
                     groupedByMealplan.Combinations.Add(combination);
                     mealplans.Add(board, groupedByMealplan);
                 }

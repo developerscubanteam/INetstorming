@@ -58,17 +58,17 @@ namespace Ijuniper.test
                 SearchCriteria = new SearchCriteria()
                 {
                     AccommodationCodes = [
-                        "hot"
-
+                       //"225776", "98009", "64234", "9411", "225539", "225753"
+                       "182560"
                      ],
-                    CheckIn = new DateTime(2024, 12, 06),
-                    CheckOut = new DateTime(2024, 12, 11),
-                    Currency = "EUR",
+                    CheckIn = new DateTime(2025, 07, 26),
+                    CheckOut = new DateTime(2025, 07, 27),
+                    Currency = "USD",
                     Nationality = "ES",
                     Language = "es",
                     RoomCandidates = [
                          new Application.Dto.AvailabilityService.Room(){
-                             PaxesAge = [20],
+                             PaxesAge = [20,30],
                              RoomRefId = 1
                          },
                          //new Application.Dto.AvailabilityService.Room(){
@@ -89,16 +89,20 @@ namespace Ijuniper.test
                 AuditRequests = true,
                 Include = new Dictionary<string, List<string>>()
                 {
-                    { "accommodations", new List<string>(){ "name" } },
-                    { "remarks", null },
-                    { "fees", null },
-                    { "rooms", new List<string>(){"name", "description", "occupancy" } },
-                    { "cancellationpolicy", null },
-                    { "promotions", null },
-                    { "mealplan", new List<string>(){ "name"} },
-                    { "root", new List<string>(){ "paymenttype","code","name" }},
-                    { "price", null },
-                    { "hotel", new List<string>(){"name" } }
+                    {"accommodations", new(){"name"} },
+                    {"remarks", new(){ } },
+                    {"fees", new(){ } },
+                    {"rooms", new(){"name", "description", "occupancy" } },
+                    {"occupancy", new(){ } },
+                    {"cancellationpolicy", new(){ } },
+                    {"promotions", new(){ } },
+                    {"mealplan", new(){ "name" } },
+                    {"root", new (){"paymenttype", "code", "name", "remarks" }},
+                    {"price", new(){ } },
+                    {"bookings", new (){"cancellocator", "hcn", "checkin", "checkout", "clientreference", "comments" } },
+                    {"holder", new(){ } },
+                    {"hotel", new(){ "name" } },
+                    {"paxes", new(){ "title", "address", "country", "city", "age", "document", "email", "idpax", "phonenumber", "postalcode" } }
                 },
             };
             HttpRequestMessage request = GetRequest("api/Availability"

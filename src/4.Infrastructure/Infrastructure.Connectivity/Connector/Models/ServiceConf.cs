@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Infrastructure.Connectivity.Connector.Models
+﻿namespace Infrastructure.Connectivity.Connector.Models
 {
     public class ServiceConf
     {
@@ -12,5 +6,16 @@ namespace Infrastructure.Connectivity.Connector.Models
         public const int TimeoutValuation = 180000;
         public const int TimeoutBooking = 180000;
 
+        public const int MaxChildAge = 12;
+        public const byte MaxInfantAge = 1;
+
+        public const int MaxHotelsPerSearch = 200;
+
+        public const string Name = "Netstorming";
+
+        public const int AvailTimeout = 10000;
+        public const int BookTimeout = 120000;
+
+        public const string ApiVersion = "1.6.1";
     }
 }

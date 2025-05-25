@@ -1,14 +1,12 @@
 ﻿using Domain.Common;
-using Domain.ValuationCode;
 using Infrastructure.Connectivity.Connector.Models;
+using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRQ;
 using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS;
 using Infrastructure.Connectivity.Connector.Models.Message.BookingRS;
 using Infrastructure.Connectivity.Connector.Models.Message.ValuationRS;
 using Infrastructure.Connectivity.Contracts;
 using Infrastructure.Connectivity.Queries;
-using System.Globalization;
 using AvailabilityRq = Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRQ;
-using BookingRq = Infrastructure.Connectivity.Connector.Models.Message.BookingRQ;
 
 
 
@@ -63,7 +61,37 @@ namespace Infrastructure.Connectivity.Connector
         private AvailabilityRq.AvailabilityRQ BuildAvalabilityRequest(AvailabilityConnectorQuery query)
         {
             //TODO: Implement this method
-            var hotelAvailRQ = new AvailabilityRq.AvailabilityRQ();
+            var hotelAvailRQ = new AvailabilityRq.AvailabilityRQ()
+            {
+                rq = new NetStormingAvailabilityRQ()
+                {
+                    header = new RequestEnvelopeHeader()
+                    {
+                        actor = query.ConnectionData.Actor,
+                        user = query.ConnectionData.User,
+                        password = query.ConnectionData.Password,
+                        version = ServiceConf.ApiVersion,
+                        timestamp = ToTimesStamp(DateTime.Now)
+                    },
+                    query = new AvailabilityEnvelopeQuery()
+                    {
+                        checkin = new envelopeQueryCheckin() { date = query.SearchCriteria.CheckInDate },
+                        checkout = new envelopeQueryCheckout() { date = query.SearchCriteria.CheckOutDate },
+                        type = "availability",
+                        nationality = query.SearchCriteria.Nationality,
+                        hotel = query.SearchCriteria.Accommodations.Select(x => new envelopeQueryHotel() { id = uint.Parse(x) }).ToArray(),
+                        filters = new envelopeQueryFilters() { filter = "AVAILONLY" },
+                        product = "hotel",
+                        details = GetAvailRooms(query),
+                    }
+                }
+            };
+
+            if (query.Timeout > 0)
+            {
+                hotelAvailRQ.rq.query.timeout = query.Timeout / 1000;
+            }
+            ;
 
             return hotelAvailRQ;
         }
@@ -76,7 +104,7 @@ namespace Infrastructure.Connectivity.Connector
             return valuationRq;
         }
 
-      
+
 
         private Models.Message.BookingRQ.BookRQ BuildBookingRequest(BookingConnectorQuery query)
         {
@@ -84,7 +112,7 @@ namespace Infrastructure.Connectivity.Connector
             var vc = query.ValuationCode;
             var bc = query.BookingCode;
 
-            var result = new Models.Message.BookingRQ.BookRQ();            
+            var result = new Models.Message.BookingRQ.BookRQ();
 
             return result;
         }
@@ -103,6 +131,54 @@ namespace Infrastructure.Connectivity.Connector
 
             return result;
         }
+        public envelopeQueryRoom[] GetAvailRooms(AvailabilityConnectorQuery rq)
+        {
+            var roomList = new List<envelopeQueryRoom>();
+            foreach (var candidate in rq.SearchCriteria.RoomCandidates)
+            {
+                var adt = candidate.Pax.Where(x => x.Age > ServiceConf.MaxChildAge).Count();
+                var chd = candidate.Pax.Where(x => x.Age > ServiceConf.MaxInfantAge && x.Age <= ServiceConf.MaxChildAge).Count();
+                var inf = candidate.Pax.Where(x => x.Age <= ServiceConf.MaxInfantAge).Count();
 
+                var room = new envelopeQueryRoom()
+                {
+                    occupancy = adt.ToString(),
+                    required = 1
+                };
+
+                if (chd > 0)
+                {
+                    room.extrabed = true;
+                    room.age = string.Join("-", candidate.Pax.Where(x => x.Age > ServiceConf.MaxInfantAge && x.Age <= ServiceConf.MaxChildAge).Select(x => x.Age.ToString()).ToArray());
+                }
+                ;
+
+                if (inf > 0)
+                {
+                    room.cot = true;
+                }
+                ;
+
+                roomList.Add(room);
+            }
+
+            var result = roomList.GroupBy(x => new { x.occupancy, x.cot, x.extrabed, x.age }).Select(y => new envelopeQueryRoom()
+            {
+                occupancy = y.Key.occupancy,
+                required = (byte)y.Count(),
+                age = y.Key.age,
+                cot = y.Key.cot,
+                extrabed = y.Key.extrabed,
+                cotSpecified = y.Key.cot == true,
+                extrabedSpecified = y.Key.extrabed == true
+            });
+
+            return result.ToArray();
+        }
+
+        public string ToTimesStamp(DateTime date)
+        {
+            return date.ToString("yyyyMMddHHmmss");
+        }
     }
 }

@@ -17,5 +17,11 @@
         public const int BookTimeout = 120000;
 
         public const string ApiVersion = "1.6.1";
+
+        //BookingStatus
+        public const string Pending = "pnd";
+        public const string Confirmed = "cnf";
+        public const string Canceled = "cxl";
+        public const string Rejected = "rej";
     }
 }

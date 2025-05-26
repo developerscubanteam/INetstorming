@@ -71,7 +71,7 @@ namespace Infrastructure.Connectivity.Connector
                         user = query.ConnectionData.User,
                         password = query.ConnectionData.Password,
                         version = ServiceConf.ApiVersion,
-                        timestamp = ToTimesStamp(DateTime.Now)
+                        timestamp = DateTimeExtension.GetTimeStamp()
                     },
                     query = new AvailabilityEnvelopeQuery()
                     {
@@ -176,9 +176,5 @@ namespace Infrastructure.Connectivity.Connector
             return result.ToArray();
         }
 
-        public string ToTimesStamp(DateTime date)
-        {
-            return date.ToString("yyyyMMddHHmmss");
-        }
     }
 }

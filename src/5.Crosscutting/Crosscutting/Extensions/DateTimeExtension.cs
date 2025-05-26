@@ -38,5 +38,15 @@ namespace System
         {
             return string.Format("{0:hh\\:mm}", time);
         }
+
+        public static string ToTimesStamp(this DateTime date)
+        {
+            return date.ToString("yyyyMMddHHmmss");
+        }
+
+        public static string GetTimeStamp()
+        {
+            return ToTimesStamp(DateTime.Now);
+        }
     }
 }

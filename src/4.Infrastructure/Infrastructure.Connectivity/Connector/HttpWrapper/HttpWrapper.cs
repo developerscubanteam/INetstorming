@@ -68,24 +68,40 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
                 if (responseMessage.StatusCode == HttpStatusCode.OK)
                 {
                     var resultString = responseString;
-                    var response = JsonSerializer.Deserialize<Message.AvailabilityRS.AvailabilityRS>(resultString, SerializeExtension.Configure());
+                    var response = resultString.DeserializateObjectToXmlString<NetStormingAvailabilityRS>();
 
-                    // Si el resultado no trae error, pero no viene vacío (no tiene hotele) se debe devolver error "NO Results"
-                    var error = IsEmptyResult(response); //implement the logic to check if the response is empty
-                    if (error != null)
+                    if (response.response.type == "availability")
                     {
-                        auditRequest.Type = AuditDataType.NoResults;
-                        return (null, error, auditData);
+                        // Si el resultado no trae error, pero no viene vacío (no tiene hotele) se debe devolver error "NO Results"
+                        var error = IsEmptyResult(response); //implement the logic to check if the response is empty
+                        if (error != null)
+                        {
+                            auditRequest.Type = AuditDataType.NoResults;
+                            return (null, error, auditData);
+                        }
+
+                        auditRequest.Type = AuditDataType.Ok;
+                        return (new AvailabilityRS { rs = response }, null, auditData);
                     }
-
-
-                    auditRequest.Type = AuditDataType.Ok;
-                    return (response, null, auditData);
+                    else
+                    {
+                        auditRequest.Type = AuditDataType.KO;
+                        var error = new Message.Common.Error
+                        {
+                            Code = "500",
+                            Message = response.response.Value
+                        };
+                        return (null, SupplierError(error), auditData);
+                    }
                 }
                 else
                 {
                     //TODO: Implement the error handling
-                    var error = new Message.Common.Error() { };
+                    var error = new Message.Common.Error()
+                    {
+                        Code = ((int)responseMessage.StatusCode).ToString(),
+                        Message = await responseMessage.Content.ReadAsStringAsync()
+                    };
                     auditRequest.Type = AuditDataType.KO;
                     return (null, SupplierError(error), auditData);
                 }
@@ -403,19 +419,18 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
             //TODO: Implement the error handling
             var errors = new List<Domain.Error.Error>
             {
-
+                new Domain.Error.Error(errorRS.Code, errorRS.Message, ErrorType.Error, CategoryErrorType.Provider)
             };
             return errors;
         }
 
-        private List<Error>? IsEmptyResult(AvailabilityRS? response)
+        private List<Domain.Error.Error>? IsEmptyResult(NetStormingAvailabilityRS? response)
         {
-            if (response != null //Logic to check if the response is empty
-                )
+            if (response?.response?.hotels != null && response.response.hotels.hotel.Any()) //Logic to check if the response is empty                
             {
                 return null;
             }
-            return [new Error("NO_AVAIL_FOUND", "No availability found", ErrorType.NoResults, CategoryErrorType.Provider)];
+            return [new Domain.Error.Error("NO_AVAIL_FOUND", "No availability found", ErrorType.NoResults, CategoryErrorType.Provider)];
         }
 
     }

@@ -138,7 +138,7 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
             var valuationRq = (Message.ValuationRQ.ValuationRQ)query;
             var auditData = new AuditData() { Requests = [] };
             var auditRequest = new Request() { RequestName = c_Method, TimeStamp = DateTime.UtcNow };
-            var rqString = JsonSerializer.Serialize(valuationRq);
+            var rqString = SerializeExtension.SerializeObjectToXmlString<NetStormingAvailabilityRQ>(valuationRq.rq);
             var responseString = "";
             var response = new ValuationRS();
 
@@ -155,7 +155,7 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
                 var message = new HttpRequestMessage(HttpMethod.Post, uri)
                 {
-                    Content = new StringContent(rqString, Encoding.UTF8, "application/json")
+                    Content = new StringContent(rqString, Encoding.UTF8, "application/XML")
                 };
 
                 var responseMessage = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);

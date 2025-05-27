@@ -166,7 +166,7 @@ namespace Ijuniper.test
                     {"hotel", new(){ "name" } },
                     {"paxes", new(){ "title", "address", "country", "city", "age", "document", "email", "idpax", "phonenumber", "postalcode" } }
                 },
-                Timeout = 100000,
+                Timeout = 180000,
             };
             // valQuery = JsonSerializer.Deserialize<ValuationQuery>(vc, Extension.Configure());
             valRequest.Content = new StringContent(Serializar(valQuery), Encoding.UTF8, "application/json");

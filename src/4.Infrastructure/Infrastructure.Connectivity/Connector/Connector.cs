@@ -1,4 +1,5 @@
 ﻿using Domain.Common;
+using Domain.ValuationCode;
 using Infrastructure.Connectivity.Connector.Models;
 using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRQ;
 using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS;
@@ -6,6 +7,7 @@ using Infrastructure.Connectivity.Connector.Models.Message.BookingRS;
 using Infrastructure.Connectivity.Connector.Models.Message.ValuationRS;
 using Infrastructure.Connectivity.Contracts;
 using Infrastructure.Connectivity.Queries;
+using System.Globalization;
 using AvailabilityRq = Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRQ;
 
 
@@ -86,13 +88,11 @@ namespace Infrastructure.Connectivity.Connector
                     }
                 }
             };
-
             if (query.Timeout > 0)
             {
                 hotelAvailRQ.rq.query.timeout = query.Timeout / 1000;
             }
             ;
-
             return hotelAvailRQ;
         }
 
@@ -100,7 +100,44 @@ namespace Infrastructure.Connectivity.Connector
         private Models.Message.ValuationRQ.ValuationRQ BuildValuationRequest(ValuationConnectorQuery query)
         {
             // TODO: Implement this method
-            var valuationRq = new Models.Message.ValuationRQ.ValuationRQ();
+            var vc = query.ValuationCode;
+            envelopeQueryHotel[] hotel = { new envelopeQueryHotel() { id = uint.Parse(vc.PropertyId) } };
+            var valuationRq = new Models.Message.ValuationRQ.ValuationRQ()
+            {
+                rq = new NetStormingAvailabilityRQ()
+                {
+                    header = new RequestEnvelopeHeader()
+                    {
+                        actor = query.ConnectionData.Actor,
+                        user = query.ConnectionData.User,
+                        password = query.ConnectionData.Password,
+                        version = ServiceConf.ApiVersion,
+                        timestamp = DateTimeExtension.GetTimeStamp()
+                    },
+                    query = new AvailabilityEnvelopeQuery()
+                    {
+                        checkin = new envelopeQueryCheckin() { date = DateTime.ParseExact(vc.CheckIn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None) },
+                        checkout = new envelopeQueryCheckout() { date = DateTime.ParseExact(vc.CheckOut, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None) },
+                        type = "availability",
+                        nationality = vc.Nationality,
+                        hotel = hotel,
+                        product = "hotel",
+                        details = GetRoomsFromValCode(vc),
+                        search = new envelopeQuerySearch()
+                        {
+                            agreement = vc.Agreement,
+                            number = vc.SearchNumber,
+                            price = vc.Price,
+                        },
+                    }
+                },
+            };
+
+            if (vc.Timeout != null && vc.Timeout > 0)
+            {
+                valuationRq.rq.query.timeout = vc.Timeout / 1000;
+            }
+
             return valuationRq;
         }
 
@@ -171,6 +208,22 @@ namespace Infrastructure.Connectivity.Connector
                 extrabed = y.Key.extrabed,
                 cotSpecified = y.Key.cot == true,
                 extrabedSpecified = y.Key.extrabed == true
+            });
+
+            return result.ToArray();
+        }
+
+        public envelopeQueryRoom[] GetRoomsFromValCode(ValuationCode vc)
+        {
+            var result = vc.RoomCandidates.GroupBy(x => new { x.Occupancy, x.Edad, x.Extrabed, x.Cot, x.RoomType }).Select(y => new envelopeQueryRoom() // Tuple<roomtype,roomRefId,occupancy, edad, extrabed, cot>
+            {
+                required = (byte)y.Count(),
+                age = y.Key.Edad,
+                extrabed = y.Key.Extrabed,
+                cot = y.Key.Cot,
+                cotSpecified = y.Key.Cot == true,
+                extrabedSpecified = y.Key.Extrabed == true,
+                type = y.Key.RoomType
             });
 
             return result.ToArray();

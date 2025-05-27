@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRQ;
 
 namespace Infrastructure.Connectivity.Connector.Models.Message.ValuationRQ
 {
     public class ValuationRQ
-    { }
+    {
+        public NetStormingAvailabilityRQ rq { get; set; }
+    }
 }

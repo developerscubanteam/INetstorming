@@ -1,5 +1,12 @@
 ﻿namespace Infrastructure.Connectivity.Connector.Models
 {
+    public enum BookingMethod
+    {
+        Availability,
+        Evaluate,
+        GetDeadLine,
+        Booking
+    };
     public class ServiceConf
     {
         public const string ClientName = "GW";

@@ -5,16 +5,16 @@ using Infrastructure.Connectivity.Connector.Models.Message.BookingRS;
 
 namespace Application.WorkFlow.Services
 {
-    class BookingResponseService
+    internal class BookingResponseService
     {
         public static Booking ToDto(Dictionary<string, List<string>>? include, Booking booking, (BookingRS? BookingRS, List<Domain.Error.Error>? Errors, AuditData AuditData) Response)
         {
-            
+
             booking.AuditData = Response.AuditData;
 
             if (Response.Errors != null && Response.Errors.Any())
             {
-                booking.Status= Status.Error;
+                booking.Status = Status.Error;
                 booking.Errors = Response.Errors;
                 return booking;
             }
@@ -26,7 +26,7 @@ namespace Application.WorkFlow.Services
 
         public static Bookings ToListDto(Dictionary<string, List<string>>? include, Bookings bookings, (BookingRS? BookingRS, List<Domain.Error.Error>? Errors, AuditData AuditData) Response)
         {
-            
+
             bookings.AuditData = Response.AuditData;
 
             if (Response.Errors != null && Response.Errors.Any())
@@ -87,8 +87,7 @@ namespace Application.WorkFlow.Services
                 }
 
                 if (IncludeService.CheckIfIsIncluded(include, Cancellationpolicy.intance, Cancellationpolicy.Empty.intance))
-                    booking.CancellationPolicy = CancellationPolicyService.GetCancellationPolicy(default, 0,"",
-                        DateTime.Parse(default));
+                    booking.CancellationPolicy = CancellationPolicyService.GetCancellationPolicy(default, default, default);
 
                 if (IncludeService.CheckIfIsIncluded(include, Fees.intance, Fees.Empty.intance))
                     booking.Fees = GetFees(default);
@@ -163,7 +162,7 @@ namespace Application.WorkFlow.Services
             return null;
         }
 
-        private static Domain.Common.Pax? GetHolder(Dictionary<string, List<string>>? include, 
+        private static Domain.Common.Pax? GetHolder(Dictionary<string, List<string>>? include,
             object paxes)
         {
             // TODO: Fill holder
@@ -171,7 +170,7 @@ namespace Application.WorkFlow.Services
             return null;
         }
 
-        private static Domain.Common.Pax GetPax(Dictionary<string, List<string>>? include, Parent key, 
+        private static Domain.Common.Pax GetPax(Dictionary<string, List<string>>? include, Parent key,
             object pax)
         {
             // TODO: Fill pax
@@ -214,11 +213,11 @@ namespace Application.WorkFlow.Services
             return bkPax;
         }
 
-        private static List<BookingRoom>? GetRooms(Dictionary<string, List<string>>? include, object service, 
+        private static List<BookingRoom>? GetRooms(Dictionary<string, List<string>>? include, object service,
             object paxes)
         {
             // TODO: Fill rooms
-            
+
             return null;
 
             //var rooms = new List<BookingRoom>();
@@ -253,7 +252,8 @@ namespace Application.WorkFlow.Services
 
         }
 
-        private static string GetComments(object reservation, object service) {
+        private static string GetComments(object reservation, object service)
+        {
 
             // TODO: Fill comments
             var comments = "";

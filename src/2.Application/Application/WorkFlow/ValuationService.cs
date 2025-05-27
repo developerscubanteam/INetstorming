@@ -139,7 +139,7 @@ namespace Application.WorkFlow
             {
                 // TODO: Fill CancellationPolicy
                 if (cancellationPolicy != null)
-                    return Services.CancellationPolicyService.GetCancellationPolicy(cancellationPolicy, 0, "", checkIn);
+                    return Services.CancellationPolicyService.GetCancellationPolicy(default, default, default);
             }
 
             return null;

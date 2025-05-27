@@ -11,31 +11,40 @@ namespace Application.WorkFlow.Services
         private const string RowSeparator = "__";
         private const string RowFieldSeparator = "~,";
 
-        public static string GetValuationCode(StringBuilder vc,object data, ICollection<Application.Dto.AvailabilityService.Room> RoomCandidates = null)
+        public static string GetValuationCode(StringBuilder vc, string propertyId, string agreement, decimal price,
+            string searchNumber, List<RoomCandidates> RoomCandidates, string checkIn, string checkOut, string nationality,
+            int? timeout)
         {
 
             var roomCandidates = new StringBuilder();
             foreach (var room in RoomCandidates)
             {
                 roomCandidates.Append(room.RoomRefId).Append(RowFieldSeparator);
-                foreach (var pax in room.PaxesAge)
+                roomCandidates.Append(room.RoomType).Append(RowFieldSeparator);
+                roomCandidates.Append(room.Occupancy).Append(RowFieldSeparator);
+                roomCandidates.Append(room.Edad).Append(RowFieldSeparator);
+                roomCandidates.Append(room.Extrabed).Append(RowFieldSeparator);
+                roomCandidates.Append(room.Cot).Append(RowFieldSeparator);
+                foreach (var age in room.PaxesAge)
                 {
-                    roomCandidates.Append(pax).Append(",");
+                    roomCandidates.Append(age).Append(",");
                 }
+                roomCandidates.Length -= 1; //Remover la última ","
                 roomCandidates.Append(RowSeparator);
             }
+            roomCandidates.Length -= 2;//Remover el último "--"
             var stringRoomCandidates = roomCandidates.ToString();
+            roomCandidates.Clear();
 
-            //vc.Append(rateId).Append(FieldValuationSeparator);
-            //vc.Append(roomId).Append(FieldValuationSeparator);
-            //vc.Append(mealPlan).Append(FieldValuationSeparator);
-            //vc.Append(accommodationCode).Append(FieldValuationSeparator);
-            //vc.Append(stringRoomCandidates).Append(FieldValuationSeparator);
-            //vc.Append(checkIn).Append(FieldValuationSeparator);
-            //vc.Append(nights).Append(FieldValuationSeparator);            
-            //vc.Append(language).Append(FieldValuationSeparator);
-            //vc.Append(currency).Append(FieldValuationSeparator);
-            //vc.Append(nationality);
+            vc.Append(propertyId).Append(FieldValuationSeparator);
+            vc.Append(agreement).Append(FieldValuationSeparator);
+            vc.Append(price).Append(FieldValuationSeparator);
+            vc.Append(searchNumber).Append(FieldValuationSeparator);
+            vc.Append(stringRoomCandidates).Append(FieldValuationSeparator);
+            vc.Append(checkIn).Append(FieldValuationSeparator);
+            vc.Append(checkOut).Append(FieldValuationSeparator);
+            vc.Append(nationality).Append(FieldValuationSeparator);
+            vc.Append(timeout);
 
             var valuationCode = vc.ToString();
             vc.Clear();
@@ -46,30 +55,39 @@ namespace Application.WorkFlow.Services
         {
             var vcParams = valuationCode.Split(FieldValuationSeparator);
             var roomCandidates = vcParams[4].Split(RowSeparator);
-            var roomCandidatesList = new List<Tuple<int, IList<int>>>();
+            //var roomCandidatesList = new List<Tuple<int, IList<int>>>();
+            var roomCandidatesList = new List<RoomCandidates>();
             foreach (var room in roomCandidates)
             {
                 var roomFields = room.Split(RowFieldSeparator);
-                var paxes = roomFields[1].Split(",");
-                var paxesList = new List<int>();
+                var paxes = roomFields[6].Split(",");
+                var paxesList = new List<byte>();
                 foreach (var pax in paxes)
                 {
-                    paxesList.Add(int.Parse(pax));
+                    paxesList.Add(byte.Parse(pax));
                 }
-                roomCandidatesList.Add(new Tuple<int, IList<int>>(int.Parse(roomFields[0]), paxesList));
+                roomCandidatesList.Add(new RoomCandidates
+                {
+                    RoomRefId = int.Parse(roomFields[0]),
+                    RoomType = roomFields[1],
+                    Occupancy = byte.Parse(roomFields[2]),
+                    Edad = roomFields[3],
+                    Extrabed = bool.Parse(roomFields[4]),
+                    Cot = bool.Parse(roomFields[5]),
+                    PaxesAge = paxesList
+                });
             }
             var vc = new ValuationCode()
             {
-               RateId = vcParams[0],
-               RoomId = vcParams[1],
-               MealPlan = vcParams[2],
-               AccommodationCode = vcParams[3],
-               RoomCandidates = roomCandidatesList,
-               CheckIn = vcParams[5],
-               Nights = int.Parse(vcParams[6]),
-               Language = vcParams[7],
-               Currency = vcParams[8],
-               Nationality = vcParams[9]
+                PropertyId = vcParams[0],
+                Agreement = vcParams[1],
+                Price = decimal.Parse(vcParams[2]),
+                SearchNumber = vcParams[3],
+                RoomCandidates = roomCandidatesList,
+                CheckIn = vcParams[5],
+                CheckOut = vcParams[6],
+                Nationality = vcParams[7],
+                Timeout = decimal.TryParse(vcParams[8], out decimal timeout) ? timeout : null,
             };
 
             return vc;
@@ -77,14 +95,14 @@ namespace Application.WorkFlow.Services
 
         public static string GetBookingCode(string vc, string bookingToken, decimal[]? amountBeforeTax, decimal[]? amountAfterTax)
         {
-        //     public required string sessionID { get; set; }
-        //public required string IdOperation { get; set; }
-        //public required string AccommodationCode { get; set; }
-        //public required string idDistributions { get; set; }
+            //     public required string sessionID { get; set; }
+            //public required string IdOperation { get; set; }
+            //public required string AccommodationCode { get; set; }
+            //public required string idDistributions { get; set; }
 
-        var stringAmountBeforeTax = amountBeforeTax != null ? string.Join(",", amountBeforeTax) : "";
-        var stringAmountAfterTax = amountAfterTax != null ? string.Join(",", amountAfterTax) : "";
-        var bc = new StringBuilder();
+            var stringAmountBeforeTax = amountBeforeTax != null ? string.Join(",", amountBeforeTax) : "";
+            var stringAmountAfterTax = amountAfterTax != null ? string.Join(",", amountAfterTax) : "";
+            var bc = new StringBuilder();
             bc.Append(vc).Append(FieldBookingSeparator);
             bc.Append(bookingToken).Append(FieldBookingSeparator);
             bc.Append(DateTime.Now).Append(FieldBookingSeparator);
@@ -99,10 +117,10 @@ namespace Application.WorkFlow.Services
 
             var bc = new BookingCode()
             {
-               ValuationCode = bcParams[0],
-               BookingToken = bcParams[1],
-               amountBeforeTax = bcParams[3].Split(",").Select(decimal.Parse).ToArray(),
-               amountAfterTax = bcParams[4].Split(",").Select(decimal.Parse).ToArray()
+                ValuationCode = bcParams[0],
+                BookingToken = bcParams[1],
+                amountBeforeTax = bcParams[3].Split(",").Select(decimal.Parse).ToArray(),
+                amountAfterTax = bcParams[4].Split(",").Select(decimal.Parse).ToArray()
             };
 
             return bc;

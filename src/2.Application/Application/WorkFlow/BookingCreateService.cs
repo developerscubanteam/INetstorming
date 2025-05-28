@@ -85,7 +85,7 @@ namespace Application.WorkFlow
                 ConnectionData = connectionData,
                 BookingCode = bookingCode,
                 ValuationCode = vc,
-                JPBookingCode = bookingCode.BookingToken,
+                JPBookingCode = "",
                 ClientReference = query.Locator,
                 Remark = GetRemark(query),
                 BillingInformation = GetVCCData(query),

@@ -93,36 +93,22 @@ namespace Application.WorkFlow.Services
             return vc;
         }
 
-        public static string GetBookingCode(string vc, string bookingToken, decimal[]? amountBeforeTax, decimal[]? amountAfterTax)
+        public static string GetBookingCode(string vc, string searchNumber)
         {
-            //     public required string sessionID { get; set; }
-            //public required string IdOperation { get; set; }
-            //public required string AccommodationCode { get; set; }
-            //public required string idDistributions { get; set; }
-
-            var stringAmountBeforeTax = amountBeforeTax != null ? string.Join(",", amountBeforeTax) : "";
-            var stringAmountAfterTax = amountAfterTax != null ? string.Join(",", amountAfterTax) : "";
             var bc = new StringBuilder();
             bc.Append(vc).Append(FieldBookingSeparator);
-            bc.Append(bookingToken).Append(FieldBookingSeparator);
-            bc.Append(DateTime.Now).Append(FieldBookingSeparator);
-            bc.Append(stringAmountBeforeTax).Append(FieldBookingSeparator);
-            bc.Append(stringAmountAfterTax);
+            bc.Append(searchNumber);
             return bc.ToString();
         }
 
         public static BookingCode DecodeBookingCode(string bookingCode)
         {
             var bcParams = bookingCode.Split(FieldBookingSeparator);
-
             var bc = new BookingCode()
             {
                 ValuationCode = bcParams[0],
-                BookingToken = bcParams[1],
-                amountBeforeTax = bcParams[3].Split(",").Select(decimal.Parse).ToArray(),
-                amountAfterTax = bcParams[4].Split(",").Select(decimal.Parse).ToArray()
+                SearchNumber = bcParams[1],
             };
-
             return bc;
         }
     }

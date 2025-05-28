@@ -5,10 +5,13 @@ using Domain.Common;
 using Domain.Common.MinimumPrice;
 using Domain.Valuation;
 using Domain.ValuationCode;
+using Infrastructure.Connectivity.Connector.Models;
+using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS;
 using Infrastructure.Connectivity.Connector.Models.Message.ValuationRS;
 using Infrastructure.Connectivity.Contracts;
 using Infrastructure.Connectivity.Queries;
 using Infrastructure.Connectivity.Queries.Base;
+using System.Globalization;
 
 namespace Application.WorkFlow
 {
@@ -89,31 +92,37 @@ namespace Application.WorkFlow
             if (valuationRS.Errors != null && valuationRS.Errors.Any())
                 result.Errors = valuationRS.Errors;
 
-            if (valuationRS.HotelBookingRulesRS != null)
+            if (valuationRS.HotelBookingRulesRS?.rs?.response?.hotels != null
+                && valuationRS.HotelBookingRulesRS.rs.response.hotels.hotel.Length > 0
+                && valuationRS.HotelBookingRulesRS.rs.response.hotels.hotel[0].agreement != null
+                && valuationRS.HotelBookingRulesRS.rs.response.hotels.hotel[0].agreement.Length > 0)
             {
                 //TODO: Fill Valuation
-                //var hotelOption = Data = default;
-                result.Status = GetStatus(default);
-                result.Code = GetHotelCode(query.Include, default);
-                result.Name = GetHotelName(query.Include, default);
-                result.Mealplan = GetMealplan(query.Include, default);
-                result.Price = GetPrice(query.Include, default);
-                result.CancellationPolicy = GetCancellationPolicy(query.Include, DateTime.Parse(vc.CheckIn), default);
-                result.MinimumPrice = GetMinimumPrice(query.Include, default);
-                result.Fees = GetValuationFees(query.Include, default);
-                result.Remarks = GetRemarks(query.Include, default);
-                result.Promotions = GetPromotions(query.Include, default);
-                result.Rooms = GetRooms(query.Include, default);
-                result.BookingCode = GetBookingCode(query.ValuationCode, default);
-                result.PaymentType = GetPaymentType(query.Include, default, vc.CheckIn);
+                var response = valuationRS.HotelBookingRulesRS.rs.response;
+                var hotel = response.hotels.hotel[0];
+                var agreement = hotel.agreement[0];
+
+                result.Status = StatusValuation.Available;//GetStatus(default); Ok
+                result.Code = GetHotelCode(query.Include, hotel.code); //Ok
+                result.Name = GetHotelName(query.Include, hotel.name); //Ok
+                result.Mealplan = GetMealplan(query.Include, agreement); //Ok
+                result.Price = GetPrice(query.Include, agreement); //Ok
+                result.CancellationPolicy = GetCancellationPolicy(query.Include, agreement); //Ok
+                result.MinimumPrice = GetMinimumPrice(query.Include, default); //Null 
+                result.Fees = GetValuationFees(query.Include, default);//Null
+                result.Remarks = GetRemarks(query.Include, agreement); //Ok
+                result.Promotions = GetPromotions(query.Include, null); //Null
+                result.Rooms = GetRooms(query.Include, agreement, query.ValuationCode);//Ok
+                result.BookingCode = GetBookingCode(query.ValuationCode, response.search.number);
+                result.PaymentType = GetPaymentType(query.Include);//Supplier
             }
 
             return result;
         }
-        private string? GetHotelCode(Dictionary<string, List<string>>? include, string? hotelCode)
+        private string? GetHotelCode(Dictionary<string, List<string>>? include, uint? hotelCode)
         {
             if (IncludeService.CheckIfIsIncluded(include, Root.intance, Root.Code.intance))
-                return hotelCode;
+                return hotelCode.ToString();
 
             return null;
         }
@@ -133,19 +142,20 @@ namespace Application.WorkFlow
         }
 
         private Domain.Common.CancellationPolicy.CancellationPolicy? GetCancellationPolicy(Dictionary<string, List<string>>? include,
-            DateTime checkIn, object? cancellationPolicy)
+            AvailHotelAgreement agreement)
         {
             if (IncludeService.CheckIfIsIncluded(include, Cancellationpolicy.intance, Cancellationpolicy.Empty.intance))
             {
                 // TODO: Fill CancellationPolicy
-                if (cancellationPolicy != null)
-                    return Services.CancellationPolicyService.GetCancellationPolicy(default, default, default);
+                var nonRefundable = agreement.policies.Any(x => DateTime.ParseExact(x.from.Substring(0, 10), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None) <= DateTime.Now && x.percentage >= 100);
+
+                return Services.CancellationPolicyService.GetCancellationPolicy(agreement, nonRefundable, BookingMethod.GetDeadLine);
             }
 
             return null;
         }
 
-        private List<Promotion>? GetPromotions(Dictionary<string, List<string>>? include, object hotelOption)
+        private List<Promotion>? GetPromotions(Dictionary<string, List<string>>? include, object? hotelOption)
         {
             if (IncludeService.CheckIfIsIncluded(include, Promotions.intance, Promotions.Empty.intance))
             {
@@ -159,65 +169,100 @@ namespace Application.WorkFlow
             return null;
         }
 
-        private PaymentType? GetPaymentType(Dictionary<string, List<string>>? include, object hotelOption, string checkIn)
+        private PaymentType? GetPaymentType(Dictionary<string, List<string>>? include)
         {
             if (IncludeService.CheckIfIsIncluded(include, Root.intance, Root.Paymenttype.intance))
             {
-                // TODO: Fill PaymentType
-                //if (hotelOption.PaymentDestination == true)
-                //    return PaymentType.PaymentAtDestination;
-
-                //if (hotelOption.VirtualCreditCardInfo != null)
-                //    if (DateTime.Parse(checkIn).Date == DateTime.Parse(hotelOption.VirtualCreditCardInfo.ValidFrom).Date)
-                //        return PaymentType.CardCheckIn;
-                //    else
-                //        return PaymentType.CardBooking;
-                //else
+                // TODO: Fill PaymentType                
                 return PaymentType.SupplierPayment;
             }
             return null;
         }
 
-        private string GetBookingCode(string vc, object hotelOption)
+        private string GetBookingCode(string vc, string searchNumber)
         {
             //TODO: Fill BookingCode
-            return FlowCodeServices.GetBookingCode(vc, "", [0], [0]);
+            return FlowCodeServices.GetBookingCode(vc, searchNumber);
         }
 
-        private IEnumerable<Domain.Common.Room>? GetRooms(Dictionary<string, List<string>>? include, object hotelRooms)
+        private IEnumerable<Domain.Common.Room>? GetRooms(Dictionary<string, List<string>>? include,
+            AvailHotelAgreement agreement, string valuationCode)
         {
             // TODO: Fill Rooms
             if (IncludeService.CheckIfIsIncluded(include, Rooms.intance, Rooms.Empty.intance))
             {
                 var rooms = new List<Domain.Common.Room>();
-                //foreach (var hotelRoom in hotelRooms)
-                //{
+                var vc = FlowCodeServices.DecodeValuationCode(valuationCode);
 
-                var room = new Domain.Common.Room() { RoomRefId = 1 };
-                if (IncludeService.CheckIfIsIncluded(include, Rooms.intance, Rooms.Name.intance))
-                    room.Name = "";
+                var candidatesCopy = vc.RoomCandidates.ToList();
 
-                if (IncludeService.CheckIfIsIncluded(include, Occupancy.intance, Occupancy.Empty.intance))
-                    room.Occupancy = GetRoomOccupancy(hotelRooms);
+                for (int i = 0; i < agreement.room.Length; i++)
+                {
+                    for (int j = 1; j <= agreement.room[i].required; j++)
+                    {
+                        var found = candidatesCopy.FirstOrDefault(x => agreement.room[i].occupancy == x.PaxesAge.Count(x => x > ServiceConf.MaxChildAge)
+                                                                        && agreement.room[i].occupancyChild == x.PaxesAge.Count(x => x > ServiceConf.MaxInfantAge && x <= ServiceConf.MaxChildAge)
+                                                                        && agreement.room[i].occupancyInfant == x.PaxesAge.Count(x => x <= ServiceConf.MaxInfantAge)
+                                                                        && (
+                                                                                (!x.PaxesAge.Any(z => z > ServiceConf.MaxInfantAge && z <= ServiceConf.MaxChildAge) && agreement.room[i].age == null)
+                                                                                || (agreement.room[i].age != null && string.Join("-", x.PaxesAge.Where(z => z > ServiceConf.MaxInfantAge && z <= ServiceConf.MaxChildAge).OrderBy(p => p)) == string.Join("-", agreement.room[i].age.Split("-").OrderBy(m => int.Parse(m))))
+                                                                           )
+                                                                 );
+                        if (found == null) // a veces viene una habitación con una ocupación de paxs diferente a la solicitada por lo que nno se puede reconocer el equivalente
+                        {
+                            if (candidatesCopy.Count() == 1) // si es una sola la habitación solicitada
+                            {
+                                found = candidatesCopy.FirstOrDefault(x => x.PaxesAge.Count() <= agreement.room[0].occupancy + agreement.room[0].occupancyChild + agreement.room[0].occupancyInfant); // si la room del response tiene capacidad de pax mayor a la solicitada
+                                if (found == null)
+                                {
+                                    return null;
+                                }
+                            }
+                            else // si había más de una habitación solicitada, no se puede reconocer la equivalencia
+                            {
+                                return null;
+                            }
+                        }
+                        ;
 
-                if (IncludeService.CheckIfIsIncluded(include, Rooms.intance, Rooms.Description.intance))
-                    room.Description = "hotelRoom.Description";
+                        var room = new Domain.Common.Room() { RoomRefId = found.RoomRefId };
 
+                        if (IncludeService.CheckIfIsIncluded(include, Rooms.intance, Rooms.Name.intance))
+                            room.Name = agreement.room_type + "(" + agreement.room[i].type + ")";
+
+                        if (IncludeService.CheckIfIsIncluded(include, Rooms.intance, Rooms.Description.intance))
+                            room.Description = agreement.room_type + "(" + agreement.room[i].type + ")";
+
+                        if (IncludeService.CheckIfIsIncluded(include, Occupancy.intance, Occupancy.Empty.intance))
+                            room.Occupancy = null;//GetRoomOccupancy(hotelRooms);
+
+                        candidatesCopy.Remove(found);
+                        rooms.Add(room);
+                    }
+                }
                 return rooms;
             }
             return null;
         }
 
-        private List<string>? GetRemarks(Dictionary<string, List<string>>? include, object hotelOption)
+        private List<string>? GetRemarks(Dictionary<string, List<string>>? include, AvailHotelAgreement agreement)
         {
             if (IncludeService.CheckIfIsIncluded(include, Root.intance, Root.Remarks.intance))
             {
                 var remarks = new List<string>();
                 // TODO: Fill Remarks
 
-                if (remarks.Any())
-                    return remarks;
+                if (agreement.remarks != null && agreement.remarks.Length > 0)
+                {
+                    foreach (var remark in agreement.remarks)
+                    {
+                        if (!string.IsNullOrWhiteSpace(remark.text))
+                            remarks.Add(remark.text);
+                    }
 
+                    if (remarks.Any())
+                        return remarks;
+                }
             }
             return null;
         }
@@ -234,34 +279,31 @@ namespace Application.WorkFlow
             else
                 return null;
         }
-        private Domain.Common.Mealplan? GetMealplan(Dictionary<string, List<string>>? include, object hotelOption)
+        private Domain.Common.Mealplan? GetMealplan(Dictionary<string, List<string>>? include, AvailHotelAgreement agreement)
         {
             // TODO: Fill Mealplan
             if (IncludeService.CheckIfIsIncluded(include, Mealplans.intance, Mealplans.Empty.intance))
             {
-                if (hotelOption != null)
+                var mealplan = new Domain.Common.Mealplan()
                 {
-                    var mealplan = new Domain.Common.Mealplan()
-                    {
-                        Code = "hotelOption.PriceInformation.Board.Type,"
-                    };
+                    Code = agreement.room_basis
+                };
 
-                    if (IncludeService.CheckIfIsIncluded(include, Mealplans.intance, Mealplans.Name.intance))
-                        mealplan.Name = "hotelOption.PriceInformation.Board.Text;";
+                if (IncludeService.CheckIfIsIncluded(include, Mealplans.intance, Mealplans.Name.intance))
+                    mealplan.Name = agreement.room_basis;
 
-                    return mealplan;
-                }
+                return mealplan;
             }
 
             return null;
         }
 
-        private Domain.Common.Price.Price? GetPrice(Dictionary<string, List<string>>? include, object hotelOption)
+        private Domain.Common.Price.Price? GetPrice(Dictionary<string, List<string>>? include, AvailHotelAgreement agreement)
         {
             if (IncludeService.CheckIfIsIncluded(include, Prices.intance, Prices.Empty.intance))
             {
                 // TODO: Fill Price
-                return PriceService.GetPrice(default, default, default, default, null);
+                return PriceService.GetPrice(agreement.currency, agreement.total, false, null, null);
             }
 
             return null;
@@ -272,9 +314,7 @@ namespace Application.WorkFlow
             // TODO: Fill MinimumPrice
             if (IncludeService.CheckIfIsIncluded(include, Prices.intance, Prices.Empty.intance))
             {
-
-                return GetMinimumPrice(0, "");
-
+                return null;//GetMinimumPrice(0, "");
             }
 
             return null;
@@ -301,7 +341,6 @@ namespace Application.WorkFlow
         {
             if (IncludeService.CheckIfIsIncluded(include, Fees.intance, Fees.Empty.intance))
             {
-
                 var fees = new List<Fee>();
                 // TODO: Fill Fees
 

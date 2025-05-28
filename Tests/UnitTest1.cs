@@ -126,7 +126,7 @@ namespace Ijuniper.test
         [Test]
         public async Task MethodValuation()
         {
-            var vc = "182560^[LCL.10000022^[11800,00^[10003960^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000";
+            var vc = "182560^[LCL.10000022^[11800,00^[10005102^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000";
 
             var valRequest = GetRequest("api/Valuation", "BEDBDDDB5813A41E2B248329CDB4C884B23D0FF4F95C6AA10840B8B761B059F3");
             ValuationQuery valQuery = new ValuationQuery()
@@ -183,8 +183,7 @@ namespace Ijuniper.test
         [Test]
         public async Task MethodBooking()
         {
-            var bc = "d1fc6709-991c-4ae4-8826-5cf05718efda^[1~,20,23,__^[DE^[^]d1fc6709-991c-4ae4-8826-5cf05718efda^]6b34d56e-3740-407c-833a-82d3fc05dfdc^]DE^]11/21/2024 12:01:45 AM^]";
-
+            var bc = "182560^[LCL.10000022^[11800,00^[10005102^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000^]10005108";
 
             var bookRequest = GetRequest("api/Booking/create", "BEDBDDDB5813A41E2B248329CDB4C884B23D0FF4F95C6AA10840B8B761B059F3");
             BookingCreateQuery bookQuery = new BookingCreateQuery()

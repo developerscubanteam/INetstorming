@@ -183,7 +183,7 @@ namespace Ijuniper.test
         [Test]
         public async Task MethodBooking()
         {
-            var bc = "182560^[LCL.10000022^[11800,00^[10005102^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000^]10005108";
+            var bc = "182560^[LCL.10000022^[11800,00^[10005102^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000^]10005108^]VCEI";
 
             var bookRequest = GetRequest("api/Booking/create", "BEDBDDDB5813A41E2B248329CDB4C884B23D0FF4F95C6AA10840B8B761B059F3");
             BookingCreateQuery bookQuery = new BookingCreateQuery()
@@ -194,11 +194,13 @@ namespace Ijuniper.test
                     Connection = new System.Collections.Generic.Dictionary<string, string>()
                     {
 
-                        { "Url","http://api.stage.paximum.com"},
-                        { "ApiKey","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkYjkwZmJmZi03YWNkLTQyNDctYmZlNi01MTk4NzkwNWJlNzIiLCJyb2xlIjoiYjJjOmFwcCIsIm5iZiI6MTcyNDY1NjQwMSwiZXhwIjoxODgyNDIyNzYyLCJpYXQiOjE3MjQ2NTY0MDEsImlzcyI6Imh0dHBzOi8vYXV0aC5wYXhpbXVtLmNvbSIsImF1ZCI6Imh0dHBzOi8vYXBpLnBheGltdW0uY29tIn0.iBfdfn6wSUFsjC1lGcZNd9cYFRmAjktNx_cFiIx0Oak"},
+                        {"Url", "https://test.netstorming.net/kalima/call.php" },
+                        {"User", "xmlusers" },
+                        {"Password", "methabookxml" },
+                        {"Actor", "METHABOOK" }
                     }
-                }
-                ,
+                },
+
                 BookingCode = bc
                 ,
                 Locator = "Test" + DateTime.Now.Ticks.ToString()
@@ -208,7 +210,7 @@ namespace Ijuniper.test
                      new Application.Dto.BookingCreateService.Room(){
                         Paxes = [
                             new Pax(){ Id = 1,Name = "Test", Surname = "Test", Age = 20, Title="Mr", Email = "test@test.test"},
-                            new Pax(){ Id = 2,Name = "Test1", Surname = "Test1", Age = 23, Title="Mr",  Email = "test@test.test"}
+                            new Pax(){ Id = 2,Name = "Test1", Surname = "Test1", Age = 30, Title="Mr",  Email = "test@test.test"}
                         ],
 
                 },
@@ -218,13 +220,20 @@ namespace Ijuniper.test
                 Holder = new Pax() { Id = 1, Name = "Nino", Surname = "rac" },
                 Include = new Dictionary<string, List<string>>()
                 {
-                    { "accommodations", new List<string>(){ "name" } },
-                    { "remarks", null },
-                    { "cancellationpolicy", null},
-                    { "mealplan", new List<string>(){ "name" } },
-                    { "fees", null},
-                    { "rooms", null},
-                    { "price", null}
+                   {"accommodations", new(){"name"} },
+                    {"remarks", new(){ } },
+                    {"fees", new(){ } },
+                    {"rooms", new(){"name", "description", "occupancy" } },
+                    {"occupancy", new(){ } },
+                    {"cancellationpolicy", new(){ } },
+                    {"promotions", new(){ } },
+                    {"mealplan", new(){ "name" } },
+                    {"root", new (){"paymenttype", "code", "name", "remarks" }},
+                    {"price", new(){ } },
+                    {"bookings", new (){"cancellocator", "hcn", "checkin", "checkout", "clientreference", "comments" } },
+                    {"holder", new(){ } },
+                    {"hotel", new(){ "name" } },
+                    {"paxes", new(){ "title", "address", "country", "city", "age", "document", "email", "idpax", "phonenumber", "postalcode" } }
 
                 },
                 Remarks = "Test",

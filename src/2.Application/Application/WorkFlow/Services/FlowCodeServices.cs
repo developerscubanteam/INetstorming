@@ -93,11 +93,12 @@ namespace Application.WorkFlow.Services
             return vc;
         }
 
-        public static string GetBookingCode(string vc, string searchNumber)
+        public static string GetBookingCode(string vc, string searchNumber, string city)
         {
             var bc = new StringBuilder();
             bc.Append(vc).Append(FieldBookingSeparator);
-            bc.Append(searchNumber);
+            bc.Append(searchNumber).Append(FieldBookingSeparator);
+            bc.Append(city);
             return bc.ToString();
         }
 
@@ -108,6 +109,7 @@ namespace Application.WorkFlow.Services
             {
                 ValuationCode = bcParams[0],
                 SearchNumber = bcParams[1],
+                City = bcParams[2],
             };
             return bc;
         }

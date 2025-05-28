@@ -113,7 +113,7 @@ namespace Application.WorkFlow
                 result.Remarks = GetRemarks(query.Include, agreement); //Ok
                 result.Promotions = GetPromotions(query.Include, null); //Null
                 result.Rooms = GetRooms(query.Include, agreement, query.ValuationCode);//Ok
-                result.BookingCode = GetBookingCode(query.ValuationCode, response.search.number);
+                result.BookingCode = GetBookingCode(query.ValuationCode, response.search.number, hotel.city);
                 result.PaymentType = GetPaymentType(query.Include);//Supplier
             }
 
@@ -179,10 +179,10 @@ namespace Application.WorkFlow
             return null;
         }
 
-        private string GetBookingCode(string vc, string searchNumber)
+        private string GetBookingCode(string vc, string searchNumber, string city)
         {
             //TODO: Fill BookingCode
-            return FlowCodeServices.GetBookingCode(vc, searchNumber);
+            return FlowCodeServices.GetBookingCode(vc, searchNumber, city);
         }
 
         private IEnumerable<Domain.Common.Room>? GetRooms(Dictionary<string, List<string>>? include,

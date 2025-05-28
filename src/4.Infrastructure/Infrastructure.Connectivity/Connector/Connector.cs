@@ -3,7 +3,9 @@ using Domain.ValuationCode;
 using Infrastructure.Connectivity.Connector.Models;
 using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRQ;
 using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS;
+using Infrastructure.Connectivity.Connector.Models.Message.BookingRQ;
 using Infrastructure.Connectivity.Connector.Models.Message.BookingRS;
+using Infrastructure.Connectivity.Connector.Models.Message.Common;
 using Infrastructure.Connectivity.Connector.Models.Message.ValuationRS;
 using Infrastructure.Connectivity.Contracts;
 using Infrastructure.Connectivity.Queries;
@@ -40,6 +42,15 @@ namespace Infrastructure.Connectivity.Connector
         public async Task<(BookingRS? BookingRS, List<Domain.Error.Error>? Errors, AuditData AuditData)> CreateBooking(BookingConnectorQuery query)
         {
             var hotelBookingRulesRQ = BuildBookingRequest(query);
+            if (hotelBookingRulesRQ.Error != null)
+            {
+                var error = new Domain.Error.Error(
+                    hotelBookingRulesRQ.Error.Code,
+                    hotelBookingRulesRQ.Error.Message,
+                    Domain.Error.ErrorType.Error, Domain.Error.CategoryErrorType.Hub);
+
+                return (null, [error], new AuditData());
+            }
             var response = await _httpWrapper.Booking(query.ConnectionData, hotelBookingRulesRQ);
 
             return response;
@@ -148,9 +159,44 @@ namespace Infrastructure.Connectivity.Connector
             // TODO: Implement this method
             var vc = query.ValuationCode;
             var bc = query.BookingCode;
-
             var result = new Models.Message.BookingRQ.BookRQ();
 
+            (BookingQueryRoom[] rooms, Infrastructure.Connectivity.Connector.Models.Message.Common.Error error) getRooms = GetBookingRooms(vc, query);
+            if (getRooms.error != null)
+            {
+                result.Error = getRooms.error;
+                return result;
+            }
+
+            BookingQueryHotel hotel = new BookingQueryHotel() { code = uint.Parse(vc.PropertyId), agreement = vc.Agreement };
+
+            var rq = new NetstormingBookingRQ()
+            {
+                header = new RequestEnvelopeHeader()
+                {
+                    actor = query.ConnectionData.Actor,
+                    user = query.ConnectionData.User,
+                    password = query.ConnectionData.Password,
+                    version = ServiceConf.ApiVersion,
+                    timestamp = DateTimeExtension.GetTimeStamp()
+                },
+                query = new BookEnvelopeQuery()
+                {
+                    checkin = new envelopeQueryCheckin() { date = DateTime.ParseExact(vc.CheckIn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None) },
+                    checkout = new envelopeQueryCheckout() { date = DateTime.ParseExact(vc.CheckOut, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None) },
+                    type = "book",
+                    nationality = vc.Nationality,
+                    city = new envelopeQueryCity() { code = bc.City },
+                    synchronous = new envelopeQuerySynchronous() { value = true },
+                    hotel = hotel,
+                    product = "hotel",
+                    details = getRooms.Item1,
+                    reference = new envelopeQueryReference() { code = query.ClientReference },
+                    search = new envelopeQuerySearch() { number = bc.SearchNumber },
+                    availonly = new envelopeQueryAvailonly() { value = true },
+                }
+            };
+            result.rq = rq;
             return result;
         }
 
@@ -228,6 +274,82 @@ namespace Infrastructure.Connectivity.Connector
 
             return result.ToArray();
         }
+
+        public (BookingQueryRoom[] rooms, Error) GetBookingRooms(ValuationCode vc, BookingConnectorQuery query)
+        {
+            var result = new List<BookingQueryRoom>();
+            var bcRoomCopy = vc.RoomCandidates.ToList();
+
+            var alreadySetHolder = false;
+
+            foreach (var item in query.Rooms)
+            {
+                var paxList = new List<envelopeQueryRoomPax>();
+                // Se ordenan y concatenan las edades para comprar la ocupación de la habitación
+                var matchRoom = vc.RoomCandidates.FirstOrDefault(x => string.Join("-", x.PaxesAge.OrderBy(z => z)) == string.Join("-", item.Paxes.Select(y => y.Age).OrderBy(p => p)));
+
+                if (matchRoom == null)  // si no machean las edades con las registradas en el Valuation
+                {
+                    var error = new Error
+                    {
+                        Code = "400",
+                        Message = "The room with passenger ages '" + string.Join("-", item.Paxes.Select(x => x.Age)) + "' provided in the Reservation request does not match match any of the rooms provided in the Availability search"
+                    };
+                    return (null, error);
+                }
+                ;
+
+                var chdAges = matchRoom.Edad;
+                var chdAgesList = string.IsNullOrEmpty(chdAges) ? null : chdAges.Split('-').Select(x => byte.Parse(x)).ToList();
+
+                foreach (var pax in item.Paxes)
+                {
+                    var isHolder = (pax.Name == query.Holder.Name) && (pax.Surname == query.Holder.Surname) && !alreadySetHolder;
+
+                    if (pax.Age > ServiceConf.MaxInfantAge) // No es necesario incluir el nombre del Infant en la RQ
+                    {
+                        var p = new envelopeQueryRoomPax()
+                        {
+                            name = pax.Name,
+                            surname = pax.Surname,
+                            title = "MR",
+                            leader = isHolder,
+                            leaderSpecified = isHolder,
+                            age = (byte)((pax.Age > ServiceConf.MaxInfantAge && pax.Age <= ServiceConf.MaxChildAge) ? pax.Age : 0),
+                            ageSpecified = (pax.Age > ServiceConf.MaxInfantAge && pax.Age <= ServiceConf.MaxChildAge),
+                        };
+                        alreadySetHolder = isHolder;
+
+                        if (chdAgesList == null || !chdAgesList.Contains((byte)pax.Age))
+                        {
+                            p.age = 0;
+                            p.ageSpecified = false;
+                        }
+                        else
+                        {
+                            chdAgesList.Remove((byte)pax.Age);
+                        }
+
+                        paxList.Add(p);
+                    }
+                }
+
+                var room = new BookingQueryRoom()
+                {
+                    type = matchRoom.RoomType,
+                    pax = paxList.ToArray(),
+                    extrabed = matchRoom.Extrabed,
+                    cot = matchRoom.Cot
+                };
+
+                result.Add(room);
+                bcRoomCopy.Remove(matchRoom);
+            }
+
+
+            return (result.ToArray(), null);
+        }
+
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRQ;
+using Infrastructure.Connectivity.Connector.Models.Message.Common;
 
 namespace Infrastructure.Connectivity.Connector.Models.Message.BookingRQ
 {
@@ -6,6 +7,7 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.BookingRQ
     public class BookRQ
     {
         public NetstormingBookingRQ rq { get; set; }
+        public Error? Error { get; set; }
     }
 
     /// <remarks/>

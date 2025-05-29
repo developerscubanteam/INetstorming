@@ -3,6 +3,7 @@ using Domain.Error;
 using Infrastructure.Connectivity.Connector.Models;
 using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRQ;
 using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS;
+using Infrastructure.Connectivity.Connector.Models.Message.BookingRQ;
 using Infrastructure.Connectivity.Connector.Models.Message.BookingRS;
 using Infrastructure.Connectivity.Connector.Models.Message.Common;
 using Infrastructure.Connectivity.Connector.Models.Message.ValuationRS;
@@ -281,12 +282,13 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
         public async Task<(BookingRS? BookingRS, List<Domain.Error.Error>? Errors, AuditData AuditData)> Booking(ConnectionData connectionData, object query)
         {
             const string c_Method = UrlPath.Booking;
-            var rqString = JsonSerializer.Serialize(query);
+            var bookRq = (Message.BookingRQ.BookRQ)query;
+            var rqString = SerializeExtension.SerializeObjectToXmlString<NetstormingBookingRQ>(bookRq.rq);
             var auditData = new AuditData() { Requests = [] };
             var auditRequest = new Request() { RequestName = c_Method, TimeStamp = DateTime.UtcNow };
             var responseString = "";
             var processTime = Stopwatch.StartNew();
-
+            var bookRS = new BookingRS();
             try
             {
                 var client = _httpClientFactory.CreateClient("Av");
@@ -300,23 +302,53 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
                 var message = new HttpRequestMessage(HttpMethod.Post, uri)
                 {
-                    Content = new StringContent(rqString, Encoding.UTF8, "application/json")
+                    Content = new StringContent(rqString, Encoding.UTF8, "application/XML")
                 };
 
                 var responseMessage = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
                 responseString = await responseMessage.Content.ReadAsStringAsync();
 
-
                 if (responseMessage.StatusCode == HttpStatusCode.OK)
                 {
-                    var response = JsonSerializer.Deserialize<Message.BookingRS.BookingRS>(responseString, SerializeExtension.Configure());
-                    auditRequest.Type = AuditDataType.Ok;
-                    return (response, null, auditData);
+                    bookRS.Booking = responseString.DeserializateObjectToXmlString<NetstormingBookingRS>();
+                    if (bookRS.Booking.response.type == "book")
+                    {
+                        if (bookRS.Booking.response.status.code == ServiceConf.Confirmed)
+                        {
+                            auditRequest.Type = AuditDataType.Ok;
+                            return (bookRS, null, auditData);
+                        }
+                        else
+                        {
+                            var error = new Message.Common.Error()
+                            {
+                                Code = "500",
+                                Message = "Booking Confirmation failed with Status: " + bookRS.Booking.response.status
+                            };
+                            auditRequest.Type = AuditDataType.KO;
+                            return (null, SupplierError(error), auditData);
+                        }
+                    }
+                    else
+                    {
+                        var error = new Message.Common.Error
+                        {
+                            Code = "500",
+                            Message = bookRS.Booking.response.Value
+                        };
+                        auditRequest.Type = AuditDataType.KO;
+                        return (null, SupplierError(error), auditData);
+                    }
+
                 }
                 else
                 {
                     //TODO: Implement the error handling
-                    var error = new Message.Common.Error() { };
+                    var error = new Message.Common.Error()
+                    {
+                        Code = ((int)responseMessage.StatusCode).ToString(),
+                        Message = responseString
+                    };
                     auditRequest.Type = AuditDataType.KO;
                     return (null, SupplierError(error), auditData);
                 }

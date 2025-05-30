@@ -8,7 +8,7 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.BookingRQ
     {
         public NetstormingBookingRQ rq { get; set; }
         public Error? Error { get; set; }
-        public NetstormingCancelOrGetBookingRQ getCancelRq { get; set; }
+        public NetstormingCancelOrGetBookingRQ GetCancelRq { get; set; }
     }
 
     /// <remarks/>

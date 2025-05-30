@@ -12,7 +12,6 @@ using Infrastructure.Connectivity.Queries.Base;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
-using System.Text.Json;
 using Message = Infrastructure.Connectivity.Connector.Models.Message;
 
 namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
@@ -38,7 +37,7 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
         public async Task<(Message.AvailabilityRS.AvailabilityRS? AvailabilityRs, List<Domain.Error.Error>? Errors, AuditData AuditData)> Availability(ConnectionData connectionData, bool auditRequests, int? timeout, object query)
         {
-            const string c_Method = UrlPath.LiveCheck;
+            const string c_Method = "Availability";
             var timeoutRq = timeout.HasValue ? timeout.Value : 20000;
             var processTime = Stopwatch.StartNew();
             var auditData = new AuditData() { Requests = [] };
@@ -134,7 +133,7 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
         public async Task<(ValuationRS? ValuationRS, List<Domain.Error.Error>? Errors, AuditData AuditData)> Valuation(ConnectionData connectionData, int? timeout, object query)
         {
             var timeoutRq = timeout.HasValue ? timeout.Value : ServiceConf.TimeoutValuation;
-            var c_Method = UrlPath.PreBook;
+            var c_Method = "Evaluate";
             var processTime = Stopwatch.StartNew();
 
             var valuationRq = (Message.ValuationRQ.ValuationRQ)query;
@@ -281,7 +280,7 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
         public async Task<(BookingRS? BookingRS, List<Domain.Error.Error>? Errors, AuditData AuditData)> Booking(ConnectionData connectionData, object query)
         {
-            const string c_Method = UrlPath.Booking;
+            const string c_Method = "Book";
             var bookRq = (Message.BookingRQ.BookRQ)query;
             var rqString = SerializeExtension.SerializeObjectToXmlString<NetstormingBookingRQ>(bookRq.rq);
             var auditData = new AuditData() { Requests = [] };
@@ -376,13 +375,14 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
         public async Task<(BookingRS? BookingRS, List<Domain.Error.Error>? Errors, AuditData AuditData)> CancelBooking(ConnectionData connectionData, object query)
         {
-            const string c_Method = UrlPath.CancelBooking;
+            const string c_Method = "Cancel";
             var processTime = Stopwatch.StartNew();
-            var rqString = JsonSerializer.Serialize(query);
+            var cancelRq = (BookRQ)query;
+            var rqString = SerializeExtension.SerializeObjectToXmlString<NetstormingCancelOrGetBookingRQ>(cancelRq.GetCancelRq);
             var auditData = new AuditData() { Requests = [] };
             var auditRequest = new Request() { RequestName = c_Method, TimeStamp = DateTime.UtcNow };
             var responseString = "";
-
+            var bookingRS = new BookingRS();
             try
             {
                 var client = _httpClientFactory.CreateClient("Av");
@@ -396,7 +396,7 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
                 var message = new HttpRequestMessage(HttpMethod.Post, uri)
                 {
-                    Content = new StringContent(rqString, Encoding.UTF8, "application/json")
+                    Content = new StringContent(rqString, Encoding.UTF8, "application/XML")
                 };
 
                 var responseMessage = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
@@ -404,14 +404,46 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
                 if (responseMessage.StatusCode == HttpStatusCode.OK)
                 {
-                    var response = JsonSerializer.Deserialize<Message.BookingRS.BookingRS>(responseString, SerializeExtension.Configure());
-                    auditRequest.Type = AuditDataType.Ok;
-                    return (response, null, auditData);
+                    var response = responseString.DeserializateObjectToXmlString<NetstormingBookingRS>();
+                    if (response.response.type == "cancel")
+                    {
+                        if (response.response.status.code == ServiceConf.Canceled)
+                        {
+                            bookingRS.Booking = response;
+                            auditRequest.Type = AuditDataType.Ok;
+                            return (bookingRS, null, auditData);
+                        }
+                        else // El estado devuelto no es "Cancelado"
+                        {
+                            var error = new Message.Common.Error()
+                            {
+                                Code = "500",
+                                Message = "Booking Cancellation failed with Status: " + response.response.status.code
+                            };
+                            auditRequest.Type = AuditDataType.KO;
+                            return (null, SupplierError(error), auditData);
+                        }
+                    }
+                    else
+                    {
+                        var error = new Message.Common.Error()
+                        {
+                            Code = "500",
+                            Message = response.response.Value
+                        };
+                        auditRequest.Type = AuditDataType.KO;
+                        return (null, SupplierError(error), auditData);
+                    }
+
                 }
                 else
                 {
                     //TODO: Implement the error handling
-                    var error = new Message.Common.Error() { };
+                    var error = new Message.Common.Error()
+                    {
+                        Code = ((int)responseMessage.StatusCode).ToString(),
+                        Message = responseString
+                    };
                     auditRequest.Type = AuditDataType.KO;
                     return (null, SupplierError(error), auditData);
                 }
@@ -439,12 +471,14 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
         public async Task<(Message.BookingRS.BookingRS? GetBookingRS, List<Domain.Error.Error>? Errors, AuditData AuditData)> GetBookings(ConnectionData connectionData, object query)
         {
-            const string c_Method = UrlPath.GetBookings;
-            var rqString = JsonSerializer.Serialize(query);
+            const string c_Method = "Track";
+            var getRq = (BookRQ)query;
+            var rqString = SerializeExtension.SerializeObjectToXmlString<NetstormingCancelOrGetBookingRQ>(getRq.GetCancelRq);
             var auditData = new AuditData() { Requests = [] };
             var auditRequest = new Request() { RequestName = c_Method, TimeStamp = DateTime.UtcNow };
             var processTime = Stopwatch.StartNew();
             var responseString = "";
+            var bookingRS = new BookingRS();
 
             try
             {
@@ -458,7 +492,7 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
                 var message = new HttpRequestMessage(HttpMethod.Post, uri)
                 {
-                    Content = new StringContent(rqString, Encoding.UTF8, "application/json")
+                    Content = new StringContent(rqString, Encoding.UTF8, "application/XML")
                 };
 
                 var responseMessage = await client.SendAsync(message, HttpCompletionOption.ResponseHeadersRead);
@@ -466,15 +500,32 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
                 if (responseMessage.StatusCode == HttpStatusCode.OK)
                 {
-
-                    var response = JsonSerializer.Deserialize<Message.BookingRS.BookingRS>(responseString, SerializeExtension.Configure());
-                    auditRequest.Type = AuditDataType.Ok;
-                    return (response, null, auditData);
+                    var response = responseString.DeserializateObjectToXmlString<NetstormingBookingRS>();
+                    if (response.response.type == "track")
+                    {
+                        bookingRS.Booking = response;
+                        auditRequest.Type = AuditDataType.Ok;
+                        return (bookingRS, null, auditData);
+                    }
+                    else
+                    {
+                        var error = new Message.Common.Error
+                        {
+                            Code = "500",
+                            Message = response.response.Value
+                        };
+                        auditRequest.Type = AuditDataType.KO;
+                        return (null, SupplierError(error), auditData);
+                    }
                 }
                 else
                 {
                     //TODO: Implement the error handling
-                    var error = new Message.Common.Error() { };
+                    var error = new Message.Common.Error()
+                    {
+                        Code = ((int)responseMessage.StatusCode).ToString(),
+                        Message = responseString
+                    };
                     auditRequest.Type = AuditDataType.KO;
                     return (null, SupplierError(error), auditData);
                 }

@@ -256,7 +256,7 @@ namespace Ijuniper.test
         {
 
             var cancelrequest = GetRequest("api/Booking/cancel", "BEDBDDDB5813A41E2B248329CDB4C884B23D0FF4F95C6AA10840B8B761B059F3", HttpMethod.Put);
-            var resNo = "GOB07105409WDA4A9JW1P|Test638665772348560358"; //
+            var resNo = "B0525156K0"; //
             BookingCancelQuery cancelQuery = new BookingCancelQuery()
             {
                 ExternalSupplier = new ExternalSupplier()
@@ -264,23 +264,29 @@ namespace Ijuniper.test
                     Code = "IPaximum",
                     Connection = new System.Collections.Generic.Dictionary<string, string>()
                     {
-
-                        { "Url","http://api.stage.paximum.com"},
-                        { "ApiKey","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkYjkwZmJmZi03YWNkLTQyNDctYmZlNi01MTk4NzkwNWJlNzIiLCJyb2xlIjoiYjJjOmFwcCIsIm5iZiI6MTcyNDY1NjQwMSwiZXhwIjoxODgyNDIyNzYyLCJpYXQiOjE3MjQ2NTY0MDEsImlzcyI6Imh0dHBzOi8vYXV0aC5wYXhpbXVtLmNvbSIsImF1ZCI6Imh0dHBzOi8vYXBpLnBheGltdW0uY29tIn0.iBfdfn6wSUFsjC1lGcZNd9cYFRmAjktNx_cFiIx0Oak"},
+                        {"Url", "https://test.netstorming.net/kalima/call.php" },
+                        {"User", "xmlusers" },
+                        {"Password", "methabookxml" },
+                        {"Actor", "METHABOOK" }
                     }
                 },
                 BookingId = resNo,
                 Include = new Dictionary<string, List<string>>()
                 {
-                    { "accommodations", new List<string>(){ "name" } },
-                    { "remarks", null },
-                    { "cancellationpolicy", null},
-                    { "mealplan", new List<string>(){ "name" } },
-                    { "fees", null},
-                    { "rooms", null},
-                    { "price", null},
-                    { "cancellocator", null}
-
+                    {"accommodations", new(){"name"} },
+                    {"remarks", new(){ } },
+                    {"fees", new(){ } },
+                    {"rooms", new(){"name", "description", "occupancy" } },
+                    {"occupancy", new(){ } },
+                    {"cancellationpolicy", new(){ } },
+                    {"promotions", new(){ } },
+                    {"mealplan", new(){ "name" } },
+                    {"root", new (){"paymenttype", "code", "name", "remarks" }},
+                    {"price", new(){ } },
+                    {"bookings", new (){"cancellocator", "hcn", "checkin", "checkout", "clientreference", "comments" } },
+                    {"holder", new(){ } },
+                    {"hotel", new(){ "name" } },
+                    {"paxes", new(){ "title", "address", "country", "city", "age", "document", "email", "idpax", "phonenumber", "postalcode" } }
                 },
 
 
@@ -297,8 +303,8 @@ namespace Ijuniper.test
         [Test]
         public async Task MethodGetBooking()
         {
-            var resNo = "d5217632-eb64-4983-bfae-d5943926f1c4"; //
-            var clientReference = "Test638664114604602909";
+            var resNo = "B0525156K0"; //
+            var clientReference = "";
             //8047080112
             var request = GetRequest("api/Booking/get", "BEDBDDDB5813A41E2B248329CDB4C884B23D0FF4F95C6AA10840B8B761B059F3", HttpMethod.Post);
             BookingsQuery query = new BookingsQuery()
@@ -309,9 +315,10 @@ namespace Ijuniper.test
                     Code = "IPaximum",
                     Connection = new System.Collections.Generic.Dictionary<string, string>()
                     {
-
-                        { "Url","http://api.stage.paximum.com"},
-                        { "ApiKey","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkYjkwZmJmZi03YWNkLTQyNDctYmZlNi01MTk4NzkwNWJlNzIiLCJyb2xlIjoiYjJjOmFwcCIsIm5iZiI6MTcyNDY1NjQwMSwiZXhwIjoxODgyNDIyNzYyLCJpYXQiOjE3MjQ2NTY0MDEsImlzcyI6Imh0dHBzOi8vYXV0aC5wYXhpbXVtLmNvbSIsImF1ZCI6Imh0dHBzOi8vYXBpLnBheGltdW0uY29tIn0.iBfdfn6wSUFsjC1lGcZNd9cYFRmAjktNx_cFiIx0Oak"},
+                        {"Url", "https://test.netstorming.net/kalima/call.php" },
+                        {"User", "xmlusers" },
+                        {"Password", "methabookxml" },
+                        {"Actor", "METHABOOK" }
                     }
                 },
                 //ClientReference = clientReference,
@@ -319,14 +326,20 @@ namespace Ijuniper.test
 
                 Include = new Dictionary<string, List<string>>()
                 {
-                    { "accommodations", new List<string>(){ "name" } },
-                    { "remarks", null },
-                    { "cancellationpolicy", null},
-                    { "mealplan", new List<string>(){ "name" } },
-                    { "fees", null},
-                    { "rooms", null},
-                    { "price", null}
-
+                    {"accommodations", new(){"name"} },
+                    {"remarks", new(){ } },
+                    {"fees", new(){ } },
+                    {"rooms", new(){"name", "description", "occupancy" } },
+                    {"occupancy", new(){ } },
+                    {"cancellationpolicy", new(){ } },
+                    {"promotions", new(){ } },
+                    {"mealplan", new(){ "name" } },
+                    {"root", new (){"paymenttype", "code", "name", "remarks" }},
+                    {"price", new(){ } },
+                    {"bookings", new (){"cancellocator", "hcn", "checkin", "checkout", "clientreference", "comments" } },
+                    {"holder", new(){ } },
+                    {"hotel", new(){ "name" } },
+                    {"paxes", new(){ "title", "address", "country", "city", "age", "document", "email", "idpax", "phonenumber", "postalcode" } }
                 },
 
 

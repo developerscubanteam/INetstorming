@@ -58,12 +58,12 @@ namespace Application.WorkFlow.Services
                     booking.HCN = response.reference.hcn;
 
                 if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.CheckInDate.intance))
-                    booking.CheckIn = DateTime.TryParse(response.checkin.ToString(), out DateTime checkIn)
+                    booking.CheckIn = DateTime.TryParse(response.checkin.date.ToString(), out DateTime checkIn)
                         ? checkIn
                         : null;
 
                 if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.CheckOutDate.intance))
-                    booking.CheckOut = DateTime.TryParse(response.checkout.ToString(), out DateTime checkOut)
+                    booking.CheckOut = DateTime.TryParse(response.checkout.date.ToString(), out DateTime checkOut)
                         ? checkOut
                         : null; ;
 

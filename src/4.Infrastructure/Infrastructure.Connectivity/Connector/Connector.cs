@@ -203,15 +203,54 @@ namespace Infrastructure.Connectivity.Connector
         private Models.Message.BookingRQ.BookRQ BuildBookingGetRequest(BookingsConnectorQuery query)
         {
             //TODO: Implement this method
-            var result = new Models.Message.BookingRQ.BookRQ();
+            var result = new Models.Message.BookingRQ.BookRQ()
+            {
+                GetCancelRq = new NetstormingCancelOrGetBookingRQ
+                {
+                    header = new RequestEnvelopeHeader()
+                    {
+                        actor = query.ConnectionData.Actor,
+                        password = query.ConnectionData.Password,
+                        user = query.ConnectionData.User,
+                        version = ServiceConf.ApiVersion,
+                        timestamp = DateTimeExtension.GetTimeStamp()
+                    },
+                    query = new CancelEnvelopeQuery()
+                    {
+                        type = "track",
+                        product = "hotel",
+                        booking = new CancelQueryBooking() { name = query.Locator },
+                        //  reference = new CancelQueryReference() { code = locator }
+                    }
+                }
+            };
 
             return result;
         }
         private Models.Message.BookingRQ.BookRQ BuildCancelBookingRequest(BookingCancelConnectorQuery query)
         {
             //TODO: Implement this method
-            var result = new Models.Message.BookingRQ.BookRQ();
-
+            var result = new Models.Message.BookingRQ.BookRQ()
+            {
+                GetCancelRq = new NetstormingCancelOrGetBookingRQ
+                {
+                    header = new RequestEnvelopeHeader()
+                    {
+                        actor = query.ConnectionData.Actor,
+                        password = query.ConnectionData.Password,
+                        user = query.ConnectionData.User,
+                        version = ServiceConf.ApiVersion,
+                        timestamp = DateTimeExtension.GetTimeStamp()
+                    },
+                    query = new CancelEnvelopeQuery()
+                    {
+                        type = "cancel",
+                        product = "hotel",
+                        booking = new CancelQueryBooking() { name = query.Locator },
+                        //  reference = new CancelQueryReference() { code = locator }
+                    }
+                }
+            };
             return result;
         }
         public envelopeQueryRoom[] GetAvailRooms(AvailabilityConnectorQuery rq)

@@ -126,7 +126,7 @@ namespace Ijuniper.test
         [Test]
         public async Task MethodValuation()
         {
-            var vc = "182560^[LCL.10000022^[11800,00^[10005102^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000";
+            var vc = "182560^[LCL.10000022^[11800,00^[10014155^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000";
 
             var valRequest = GetRequest("api/Valuation", "BEDBDDDB5813A41E2B248329CDB4C884B23D0FF4F95C6AA10840B8B761B059F3");
             ValuationQuery valQuery = new ValuationQuery()
@@ -183,7 +183,7 @@ namespace Ijuniper.test
         [Test]
         public async Task MethodBooking()
         {
-            var bc = "182560^[LCL.10000022^[11800,00^[10005102^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000^]10005108^]VCEI";
+            var bc = "182560^[LCL.10000022^[11800,00^[10014155^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000^]10014158^]VCEI";
 
             var bookRequest = GetRequest("api/Booking/create", "BEDBDDDB5813A41E2B248329CDB4C884B23D0FF4F95C6AA10840B8B761B059F3");
             BookingCreateQuery bookQuery = new BookingCreateQuery()
@@ -201,10 +201,9 @@ namespace Ijuniper.test
                     }
                 },
 
-                BookingCode = bc
-                ,
-                Locator = "Test" + DateTime.Now.Ticks.ToString()
-                ,
+                BookingCode = bc,
+                Locator = Guid.NewGuid().ToString().Substring(0, 20).Replace("-", string.Empty),//"T" + DateTime.Now.Ticks.ToString(),
+
                 Rooms =
                 [
                      new Application.Dto.BookingCreateService.Room(){
@@ -212,12 +211,12 @@ namespace Ijuniper.test
                             new Pax(){ Id = 1,Name = "Test", Surname = "Test", Age = 20, Title="Mr", Email = "test@test.test"},
                             new Pax(){ Id = 2,Name = "Test1", Surname = "Test1", Age = 30, Title="Mr",  Email = "test@test.test"}
                         ],
-
-                },
-
+                      },
 
                 ],
+
                 Holder = new Pax() { Id = 1, Name = "Nino", Surname = "rac" },
+
                 Include = new Dictionary<string, List<string>>()
                 {
                    {"accommodations", new(){"name"} },

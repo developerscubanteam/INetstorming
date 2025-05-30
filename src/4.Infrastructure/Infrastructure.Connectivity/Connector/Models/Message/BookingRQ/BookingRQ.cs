@@ -8,6 +8,7 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.BookingRQ
     {
         public NetstormingBookingRQ rq { get; set; }
         public Error? Error { get; set; }
+        public NetstormingCancelOrGetBookingRQ getCancelRq { get; set; }
     }
 
     /// <remarks/>
@@ -679,4 +680,167 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.BookingRQ
             }
         }
     }
+
+    //
+    //Get y Cancel RQ   
+    //
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace = "", IsNullable = false, ElementName = "envelope")]
+    public partial class NetstormingCancelOrGetBookingRQ
+    {
+
+        private RequestEnvelopeHeader headerField;
+
+        private CancelEnvelopeQuery queryField;
+
+        /// <remarks/>
+        public RequestEnvelopeHeader header
+        {
+            get
+            {
+                return this.headerField;
+            }
+            set
+            {
+                this.headerField = value;
+            }
+        }
+
+        /// <remarks/>
+        public CancelEnvelopeQuery query
+        {
+            get
+            {
+                return this.queryField;
+            }
+            set
+            {
+                this.queryField = value;
+            }
+        }
+    }
+
+
+    /// <remarks/>
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    public partial class CancelEnvelopeQuery
+    {
+
+        private CancelQueryReference referenceField;
+
+        private CancelQueryBooking bookingField;
+
+        private string typeField;
+
+        private string productField;
+
+        /// <remarks/>
+        public CancelQueryReference reference
+        {
+            get
+            {
+                return this.referenceField;
+            }
+            set
+            {
+                this.referenceField = value;
+            }
+        }
+
+        /// <remarks/>
+        public CancelQueryBooking booking
+        {
+            get
+            {
+                return this.bookingField;
+            }
+            set
+            {
+                this.bookingField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string type
+        {
+            get
+            {
+                return this.typeField;
+            }
+            set
+            {
+                this.typeField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string product
+        {
+            get
+            {
+                return this.productField;
+            }
+            set
+            {
+                this.productField = value;
+            }
+        }
+    }
+
+    /// <remarks/>
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    public partial class CancelQueryReference
+    {
+
+        private string codeField;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string code
+        {
+            get
+            {
+                return this.codeField;
+            }
+            set
+            {
+                this.codeField = value;
+            }
+        }
+    }
+
+    /// <remarks/>
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    public partial class CancelQueryBooking
+    {
+
+        private string nameField;
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string name
+        {
+            get
+            {
+                return this.nameField;
+            }
+            set
+            {
+                this.nameField = value;
+            }
+        }
+    }
+
+
+
 }

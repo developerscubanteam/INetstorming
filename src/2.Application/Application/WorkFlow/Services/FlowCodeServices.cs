@@ -17,27 +17,23 @@ namespace Application.WorkFlow.Services
         {
 
             var roomCandidates = new StringBuilder();
-            if (RoomCandidates != null)//Quitar condición cuando se revise el método GetValRoom del Availability
+            foreach (var room in RoomCandidates)
             {
-                foreach (var room in RoomCandidates)
+                roomCandidates.Append(room.RoomRefId).Append(RowFieldSeparator);
+                roomCandidates.Append(room.RoomType).Append(RowFieldSeparator);
+                roomCandidates.Append(room.Occupancy).Append(RowFieldSeparator);
+                roomCandidates.Append(room.Edad).Append(RowFieldSeparator);
+                roomCandidates.Append(room.Extrabed).Append(RowFieldSeparator);
+                roomCandidates.Append(room.Cot).Append(RowFieldSeparator);
+                foreach (var age in room.PaxesAge)
                 {
-                    roomCandidates.Append(room.RoomRefId).Append(RowFieldSeparator);
-                    roomCandidates.Append(room.RoomType).Append(RowFieldSeparator);
-                    roomCandidates.Append(room.Occupancy).Append(RowFieldSeparator);
-                    roomCandidates.Append(room.Edad).Append(RowFieldSeparator);
-                    roomCandidates.Append(room.Extrabed).Append(RowFieldSeparator);
-                    roomCandidates.Append(room.Cot).Append(RowFieldSeparator);
-                    foreach (var age in room.PaxesAge)
-                    {
-                        roomCandidates.Append(age).Append(",");
-                    }
-                    roomCandidates.Length -= 1; //Remover la última ","
-                    roomCandidates.Append(RowSeparator);
-
+                    roomCandidates.Append(age).Append(",");
                 }
-                roomCandidates.Length -= 2;//Remover el último "--"
-            }
+                roomCandidates.Length -= 1; //Remover la última ","
+                roomCandidates.Append(RowSeparator);
 
+            }
+            roomCandidates.Length -= 2;//Remover el último "--"
             var stringRoomCandidates = roomCandidates.ToString();
             roomCandidates.Clear();
 

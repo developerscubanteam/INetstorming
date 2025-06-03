@@ -215,12 +215,14 @@ namespace Application.WorkFlow
             AvailEnvelopeResponse response, AvailabilityQuery query, AvailHotelAgreement agreement)
         {
             var roomCandidatesList = GetValRooms(agreement, query.SearchCriteria.RoomCandidates);
-            return FlowCodeServices.GetValuationCode(vc, propertyId, agreement.id, agreement.total,
-                response.search.number, roomCandidatesList,
-                query.SearchCriteria.CheckIn.ToFormat_yyyyMMdd(),
-                query.SearchCriteria.CheckOut.ToFormat_yyyyMMdd(),
-                query.SearchCriteria.Nationality,
-                query.Timeout);
+            return roomCandidatesList != null
+                ? FlowCodeServices.GetValuationCode(vc, propertyId, agreement.id, agreement.total,
+                    response.search.number, roomCandidatesList,
+                    query.SearchCriteria.CheckIn.ToFormat_yyyyMMdd(),
+                    query.SearchCriteria.CheckOut.ToFormat_yyyyMMdd(),
+                    query.SearchCriteria.Nationality,
+                    query.Timeout)
+                : string.Empty;
         }
 
         private List<RoomCandidates> GetValRooms(AvailHotelAgreement agreement, ICollection<Dto.AvailabilityService.Room> roomCandidates)

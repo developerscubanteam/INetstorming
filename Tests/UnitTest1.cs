@@ -58,23 +58,28 @@ namespace Ijuniper.test
                 SearchCriteria = new SearchCriteria()
                 {
                     AccommodationCodes = [
-                       //"225776", "98009", "64234", "9411", "225539", "225753"
-                       "182560"
+                         "225776", "98009", "64234", "9411", "225539", "225753",
+                        "213407", "95183", "175808", "225648", "152260",
+                        "175894", "208109", "225614", "175680", "225770", "225809",
+                        "182560",
+                        "70137",
+                        "21317",
+                       //"182560"
                      ],
-                    CheckIn = new DateTime(2025, 07, 26),
-                    CheckOut = new DateTime(2025, 07, 27),
+                    CheckIn = new DateTime(2025, 08, 26),
+                    CheckOut = new DateTime(2025, 08, 30),
                     Currency = "USD",
                     Nationality = "ES",
                     Language = "es",
                     RoomCandidates = [
                          new Application.Dto.AvailabilityService.Room(){
-                             PaxesAge = [20,30],
+                             PaxesAge = [20,30,5],
                              RoomRefId = 1
                          },
-                         //new Application.Dto.AvailabilityService.Room(){
-                         //    PaxesAge = new List<byte>(){ 30},
-                         //    RoomRefId = 2
-                         //},
+                         new Application.Dto.AvailabilityService.Room(){
+                             PaxesAge = [30, 35],
+                             RoomRefId = 2
+                         },
                          //new Application.Dto.AvailabilityService.Room(){
                          //    PaxesAge = new List<byte>(){ 40,45},
                          //    RoomRefId = 3

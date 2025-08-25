@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\1.Presentation\PTGWJson\IGwJsonApi.csproj" />
+    <ProjectReference Include="..\src\1.Presentation\PTGWJson\INetstormingv2Api.csproj" />
     <ProjectReference Include="..\src\2.Application\Application.Dto\Application.Dto.csproj" />
     <ProjectReference Include="..\src\2.Application\Application\Application.csproj" />
   </ItemGroup>

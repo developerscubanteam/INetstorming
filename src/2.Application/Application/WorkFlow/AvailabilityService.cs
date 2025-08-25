@@ -142,7 +142,8 @@ namespace Application.WorkFlow
                                     Remarks = GetAvailRemarks(query.Include, agreement) //Ok
                                 };
 
-                                AddMealplan(mealPlan, combination, board, query);
+                                if (combination.Rooms != null && combination.Rooms.Count == query.SearchCriteria.RoomCandidates.Count)  
+                                    AddMealplan(mealPlan, combination, board, query);
                             }
                         }
                     }
@@ -342,6 +343,7 @@ namespace Application.WorkFlow
                     var room = new Domain.Common.Room()
                     {
                         Code = agreement.room_type + "(" + agreement.room[i].type + ")",
+                        Name = agreement.room_type + "(" + agreement.room[i].type + ")",
                         Description = agreement.room_type + "(" + agreement.room[i].type + ")",
                         RoomRefId = matchRoom.RoomRefId
                     };
@@ -449,7 +451,7 @@ namespace Application.WorkFlow
                 }
 
                 if (remarkList.Any())
-                    return remarkList;
+                    return remarkList.Distinct().ToList();
             }
 
             return null;

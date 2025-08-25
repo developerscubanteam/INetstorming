@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure.Connectivity
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "src\2.Application\Application\Application.csproj", "{BC3421A0-901B-4B8D-BB8B-1EE11C1FA2C6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IGwJsonApi", "src\1.Presentation\PTGWJson\IGwJsonApi.csproj", "{0781FAA7-8194-400A-81D2-E8411997FD6F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "INetstormingv2Api", "src\1.Presentation\PTGWJson\INetstormingv2Api.csproj", "{0781FAA7-8194-400A-81D2-E8411997FD6F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A6F49E72-6B69-4713-903F-D27DB063B65E}"
 	ProjectSection(SolutionItems) = preProject

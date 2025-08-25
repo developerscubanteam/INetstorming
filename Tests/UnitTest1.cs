@@ -58,26 +58,26 @@ namespace Ijuniper.test
                 SearchCriteria = new SearchCriteria()
                 {
                     AccommodationCodes = [
-                         "225776", "98009", "64234", "9411", "225539", "225753",
-                        "213407", "95183", "175808", "225648", "152260",
-                        "175894", "208109", "225614", "175680", "225770", "225809",
+                        // "225776", "98009", "64234", "9411", "225539", "225753",
+                        //"213407", "95183", "175808", "225648", "152260",
+                        //"175894", "208109", "225614", "175680", "225770", "225809",
                         "182560",
-                        "70137",
-                        "21317",
+                        //"70137",
+                        //"21317",
                        //"182560"
                      ],
-                    CheckIn = new DateTime(2025, 08, 26),
-                    CheckOut = new DateTime(2025, 08, 30),
+                    CheckIn = new DateTime(2025, 11, 25),
+                    CheckOut = new DateTime(2025, 11, 28),
                     Currency = "USD",
                     Nationality = "ES",
                     Language = "es",
                     RoomCandidates = [
                          new Application.Dto.AvailabilityService.Room(){
-                             PaxesAge = [20,30,5],
+                             PaxesAge = [30,30],
                              RoomRefId = 1
                          },
                          new Application.Dto.AvailabilityService.Room(){
-                             PaxesAge = [30, 35],
+                             PaxesAge = [30],
                              RoomRefId = 2
                          },
                          //new Application.Dto.AvailabilityService.Room(){
@@ -131,7 +131,7 @@ namespace Ijuniper.test
         [Test]
         public async Task MethodValuation()
         {
-            var vc = "182560^[LCL.10000022^[11800,00^[10014155^[1~,dbl~,2~,~,False~,False~,20,30^[2025-07-26^[2025-07-27^[ES^[100000";
+            var vc = "182560^[LCL.10000022.@@1^[103840.00^[10213310^[1~,twn~,2~,~,False~,False~,20,30__2~,twn~,2~,~,False~,False~,30,35^[2025-11-26^[2025-11-30^[ES^[100000";
 
             var valRequest = GetRequest("api/Valuation", "BEDBDDDB5813A41E2B248329CDB4C884B23D0FF4F95C6AA10840B8B761B059F3");
             ValuationQuery valQuery = new ValuationQuery()

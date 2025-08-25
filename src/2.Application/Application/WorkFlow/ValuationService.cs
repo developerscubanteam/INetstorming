@@ -261,7 +261,7 @@ namespace Application.WorkFlow
                     }
 
                     if (remarks.Any())
-                        return remarks;
+                        return remarks.Distinct().ToList();
                 }
             }
             return null;

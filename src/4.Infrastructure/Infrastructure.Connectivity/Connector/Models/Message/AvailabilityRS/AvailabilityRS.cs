@@ -1,8 +1,4 @@
-﻿using Infrastructure.Connectivity.Connector.Models.Message.Common;
-using System.Xml;
-
-
-namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
+﻿namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
 {
 
     public class AvailabilityRS
@@ -13,7 +9,7 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
     [System.Xml.Serialization.XmlRootAttribute(Namespace = "", IsNullable = false, ElementName = "envelope")]
-    public partial class NetStormingAvailabilityRS : IDeserializer
+    public partial class NetStormingAvailabilityRS
     {
 
         private ResponseEnvelopeHeader headerField;
@@ -31,12 +27,6 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
             {
                 this.headerField = value;
             }
-        }
-
-        public void DeserializeFromXML(XmlReader reader)
-        {
-            responseField = new AvailEnvelopeResponse();
-            responseField.DeserializeFromXML(reader);
         }
 
         /// <remarks/>
@@ -151,7 +141,7 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class AvailEnvelopeResponse : IDeserializer
+    public partial class AvailEnvelopeResponse
     {
 
         private AvailResponseSearch searchField;
@@ -172,47 +162,6 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
 
         private string valueField;
 
-
-        public void DeserializeFromXML(XmlReader reader)
-        {
-            typeField = reader.GetAttribute("type");
-
-            if (typeField == "availability")
-            {
-                //    var xx = Extension.ExtractXmlValue(reader);
-                if (string.IsNullOrWhiteSpace(reader.Value)) // Si el valor del response es vacío, quiere decir que devolvió resultados; de lo contrario en el valor viene el mensaje de error
-                {
-                    while (reader.Read())
-                    {
-                        if (reader.NodeType == XmlNodeType.EndElement && reader.Name == "response")
-                        {
-                            break;
-                        }
-
-                        if (reader.NodeType == XmlNodeType.Element && reader.Name == "search")
-                        {
-                            var number = reader.GetAttribute("number");
-                            searchField = new AvailResponseSearch() { number = number };
-                        }
-                        else if (reader.NodeType == XmlNodeType.Element && reader.Name == "hotels")
-                        {
-                            var hotels = new AvailResponseHotels();
-                            hotels.DeserializeFromXML(reader);
-                            hotelsField = hotels;
-                        }
-                        else if (reader.NodeType == XmlNodeType.Text)
-                        {
-                            valueField = reader.Value;
-                        }
-                    }
-                    ;
-                }
-            }
-            else
-            {
-                valueField = Extension.Extension.ExtractXmlValue(reader);
-            }
-        }
 
         /// <remarks/>
         public AvailResponseSearch search
@@ -514,38 +463,11 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class AvailResponseHotels : IDeserializer
+    public partial class AvailResponseHotels
     {
         private AvailResponseHotel[] hotelField;
 
         private byte totalField;
-
-        public void DeserializeFromXML(XmlReader reader)
-        {
-            var hoteles = new List<AvailResponseHotel>();
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.EndElement && reader.Name == "hotels")
-                {
-                    break;
-                }
-
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "hotel")
-                {
-                    var hotel = new AvailResponseHotel()
-                    {
-                        code = uint.Parse(reader.GetAttribute("code")),
-                        city = reader.GetAttribute("city")
-                    };
-
-                    hotel.DeserializeFromXML(reader);
-                    hoteles.Add(hotel);
-                }
-                ;
-            }
-            ;
-            hotelField = hoteles.ToArray();
-        }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("hotel")]
@@ -580,7 +502,7 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class AvailResponseHotel : IDeserializer
+    public partial class AvailResponseHotel
     {
 
         private AvailHotelAgreement[] agreementField;
@@ -598,23 +520,6 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
         private bool promoField;
 
         private string cityField;
-
-        public void DeserializeFromXML(XmlReader reader)
-        {
-            var agreements = new List<AvailHotelAgreement>();
-            do
-            {
-                reader.Read();
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "agreement")
-                {
-                    var agreement = new AvailHotelAgreement();
-                    agreement.DeserializeFromXML(reader);
-                    agreements.Add(agreement);
-                }
-            } while (!(reader.NodeType == XmlNodeType.EndElement && reader.Name == "hotel"));
-
-            agreementField = agreements.ToArray();
-        }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("agreement")]
@@ -733,7 +638,7 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class AvailHotelAgreement : IDeserializer
+    public partial class AvailHotelAgreement
     {
 
         private HotelAgreementDeadline deadlineField;
@@ -773,85 +678,6 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
         private bool specialField;
 
         private string room_typeField;
-
-        public void DeserializeFromXML(XmlReader reader)
-        {
-            idField = reader.GetAttribute("id");
-            availableField = reader.GetAttribute("available") == "true";
-            room_basisField = reader.GetAttribute("room_basis");
-            meal_basisField = reader.GetAttribute("meal_basis");
-            room_typeField = reader.GetAttribute("room_type");
-            currencyField = reader.GetAttribute("currency");
-            totalField = DoubleExtensions.ToDecimal(reader.GetAttribute("total"));
-            total_grossField = DoubleExtensions.ToDecimal(reader.GetAttribute("total_gross"));
-
-            var roomsList = new List<HotelAgreementRoom>();
-            var policiesList = new List<HotelAgreementPolicy>();
-            var remarksList = new List<HotelAgreementRemark>();
-
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.EndElement && reader.Name == "agreement")
-                {
-                    break;
-                }
-                ;
-
-
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "deadline")
-                {
-                    deadlineField = new HotelAgreementDeadline()
-                    {
-                        date = reader.GetAttribute("date"),
-                        value = reader.GetAttribute("value")
-                    };
-                }
-                else if (reader.NodeType == XmlNodeType.Element && reader.Name == "policies")
-                {
-                    do
-                    {
-                        reader.Read();
-                        if (reader.NodeType == XmlNodeType.Element && reader.Name == "policy")
-                        {
-                            var policyItem = new HotelAgreementPolicy()
-                            {
-                                from = reader.GetAttribute("from"),
-                                percentage = DoubleExtensions.ToDecimal(reader.GetAttribute("percentage"))
-                            };
-                            policiesList.Add(policyItem);
-                        }
-                    } while (!(reader.NodeType == XmlNodeType.EndElement && reader.Name == "policies"));
-
-                    policiesField = policiesList.ToArray();
-                }
-                else if (reader.NodeType == XmlNodeType.Element && reader.Name == "room")
-                {
-                    var roomItem = new HotelAgreementRoom();
-                    roomItem.DeserializeFromXML(reader);
-                    roomsList.Add(roomItem);
-                }
-                else if (reader.NodeType == XmlNodeType.Element && reader.Name == "remarks")
-                {
-                    do
-                    {
-                        reader.Read();
-                        if (reader.NodeType == XmlNodeType.Element && reader.Name == "remark")
-                        {
-                            var remarkItem = new HotelAgreementRemark()
-                            {
-                                code = reader.GetAttribute("code"),
-                                text = reader.GetAttribute("text")
-                            };
-                            remarksList.Add(remarkItem);
-                        }
-                    } while (!(reader.NodeType == XmlNodeType.EndElement && reader.Name == "remarks"));
-
-                    remarksField = remarksList.ToArray();
-                }
-            }
-            ;
-            roomField = roomsList.ToArray();
-        }
 
         /// <remarks/>
         public HotelAgreementDeadline deadline
@@ -1242,7 +1068,7 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class HotelAgreementRoom : IDeserializer
+    public partial class HotelAgreementRoom
     {
 
         private HotelAgreementRoomPrice[] priceField;
@@ -1271,46 +1097,6 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
 
         private bool occupancyChildFieldSpecified;
 
-        public void DeserializeFromXML(XmlReader reader)
-        {
-            typeField = reader.GetAttribute("type");
-            requiredField = byte.Parse(reader.GetAttribute("required"));
-            occupancyField = byte.Parse(reader.GetAttribute("occupancy"));
-            if (reader.GetAttribute("occupancyInfant") != null)
-                occupancyInfantField = byte.Parse(reader.GetAttribute("occupancyInfant"));
-
-            if (reader.GetAttribute("occupancyChild") != null)
-                occupancyChildField = byte.Parse(reader.GetAttribute("occupancyChild"));
-
-            ageField = reader.GetAttribute("age");
-
-            if (reader.GetAttribute("extrabed") != null)
-                extrabedField = bool.Parse(reader.GetAttribute("extrabed"));
-
-            if (reader.GetAttribute("cot") != null)
-                cotField = bool.Parse(reader.GetAttribute("cot"));
-
-            var pricesList = new List<HotelAgreementRoomPrice>();
-
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.EndElement && reader.Name == "room")
-                {
-                    break;
-                }
-                ;
-
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "price")
-                {
-                    var priceItem = new HotelAgreementRoomPrice();
-                    priceItem.DeserializeFromXML(reader);
-                    pricesList.Add(priceItem);
-                }
-                ;
-            }
-            ;
-            priceField = pricesList.ToArray();
-        }
 
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("price")]
@@ -1487,7 +1273,7 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
     [System.SerializableAttribute()]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
-    public partial class HotelAgreementRoomPrice : IDeserializer
+    public partial class HotelAgreementRoomPrice
     {
 
         private HotelAgreementRoomPriceRoomprice roompriceField;
@@ -1498,46 +1284,6 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS
 
         private string toField;
 
-
-        public void DeserializeFromXML(XmlReader reader)
-        {
-            fromField = reader.GetAttribute("from");
-            toField = reader.GetAttribute("to");
-
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.EndElement && reader.Name == "price")
-                {
-                    break;
-                }
-                ;
-
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "roomprice")
-                {
-                    var nett = reader.GetAttribute("nett");
-                    var gross = reader.GetAttribute("gross");
-
-                    roompriceField = new HotelAgreementRoomPriceRoomprice()
-                    {
-                        nett = string.IsNullOrEmpty(nett) ? 0 : DoubleExtensions.ToDecimal(nett),
-                        gross = string.IsNullOrEmpty(gross) ? 0 : DoubleExtensions.ToDecimal(gross),
-                    };
-                }
-                else if (reader.NodeType == XmlNodeType.Element && reader.Name == "cotprice")
-                {
-                    var nett = reader.GetAttribute("nett");
-                    var gross = reader.GetAttribute("gross");
-
-                    cotpriceField = new HotelAgreementRoomPriceRoomprice()
-                    {
-                        nett = string.IsNullOrEmpty(nett) ? 0 : DoubleExtensions.ToDecimal(nett),
-                        gross = string.IsNullOrEmpty(gross) ? 0 : DoubleExtensions.ToDecimal(gross),
-                    };
-                }
-                ;
-            }
-            ;
-        }
 
         /// <remarks/>
         public HotelAgreementRoomPriceRoomprice roomprice

@@ -1,6 +1,7 @@
 ﻿using Domain.Booking;
 using Domain.Common;
 using Domain.Common.MinimumPrice;
+using Domain.Error;
 using Infrastructure.Connectivity.Connector.Models;
 using Infrastructure.Connectivity.Connector.Models.Message.BookingRS;
 
@@ -36,10 +37,78 @@ namespace Application.WorkFlow.Services
                 return bookings;
             }
 
-            var bookingList = new List<Booking>() { AddBookingDetails(include, BookingsK.intance, new Booking(), Response) };
-            bookings.BookingList = bookingList;
+            if (Response.BookingRS?.Booking != null)
+                bookings.BookingList = new List<Booking>() { AddBookingDetails(include, BookingsK.intance, new Booking(), Response) };
+            else
+                bookings.BookingList = AddBookingListDetails(include, BookingsK.intance, Response);
+
 
             return bookings;
+        }
+
+        private static List<Booking>? AddBookingListDetails(Dictionary<string, List<string>>? include, Parent keyInclude,
+            (BookingRS? BookingRS, List<Error>? Errors, AuditData AuditData) response)
+        {
+            var bookingList = new List<Booking>();
+            if (response.BookingRS?.BookingList != null)
+            {
+                foreach (var book in response.BookingRS.BookingList.Response.Services.List)
+                {
+                    var booking = new Booking();
+
+                    booking.Status = SetStatus(book.Status);
+                    booking.BookingId = book.Name;
+
+                    if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.Cancellocator.intance))
+                        booking.CancelLocator = book.Name;
+
+                    if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.HotelConformationCode.intance))
+                        booking.HCN = book.HCN;
+
+                    if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.CheckInDate.intance))
+                        booking.CheckIn = DateTime.TryParse(book.CheckIn, out DateTime checkIn)
+                            ? checkIn
+                            : null;
+
+                    if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.CheckOutDate.intance))
+                        booking.CheckOut = DateTime.TryParse(book.CheckOut, out DateTime checkOut)
+                            ? checkOut
+                            : null;
+
+                    if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.HotelConformationCode.intance))
+                        booking.ClientReference = book.Reference;
+
+                    if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.Comments.intance))
+                        booking.Comments = "";
+
+                    if (IncludeService.CheckIfIsIncluded(include, Holder.intance, Holder.Empty.intance))
+                        booking.Holder = null;
+
+                    if (IncludeService.CheckIfIsIncluded(include, Hotel.intance, Hotel.Empty.intance))
+                        booking.Hotel = GetHotelInfo(include, uint.Parse(book.HotelId));
+
+                    if (IncludeService.CheckIfIsIncluded(include, Mealplans.intance, Mealplans.Empty.intance))
+                        booking.Mealplan = null;
+
+                    if (IncludeService.CheckIfIsIncluded(include, Rooms.intance, Rooms.Empty.intance))
+                        booking.Rooms = null;
+
+                    if (IncludeService.CheckIfIsIncluded(include, Prices.intance, Prices.Empty.intance))
+                    {
+                        booking.Price = Services.PriceService.GetPrice(book.Currency, book.FirstNettPrice, false, null, null);
+                        booking.MinimumPrice = null;//GetMinimumPrice(default);
+                    }
+
+                    if (IncludeService.CheckIfIsIncluded(include, Cancellationpolicy.intance, Cancellationpolicy.Empty.intance))
+                        booking.CancellationPolicy = null;
+
+                    if (IncludeService.CheckIfIsIncluded(include, Fees.intance, Fees.Empty.intance))
+                        booking.Fees = null;
+
+                    bookingList.Add(booking);
+                }
+            }
+            return bookingList;
         }
 
         private static Booking AddBookingDetails(Dictionary<string, List<string>>? include, Parent keyInclude, Booking booking,
@@ -65,7 +134,7 @@ namespace Application.WorkFlow.Services
                 if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.CheckOutDate.intance))
                     booking.CheckOut = DateTime.TryParse(response.checkout.date.ToString(), out DateTime checkOut)
                         ? checkOut
-                        : null; ;
+                        : null;
 
                 if (IncludeService.CheckIfIsIncluded(include, keyInclude, BookingsK.HotelConformationCode.intance))
                     booking.ClientReference = response.reference.code;

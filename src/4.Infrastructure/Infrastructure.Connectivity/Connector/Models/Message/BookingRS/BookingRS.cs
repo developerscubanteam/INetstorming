@@ -1,11 +1,98 @@
 ﻿using Infrastructure.Connectivity.Connector.Models.Message.AvailabilityRS;
+using System.Xml.Serialization;
 
 namespace Infrastructure.Connectivity.Connector.Models.Message.BookingRS
 {
     public class BookingRS
     {
         public NetstormingBookingRS Booking { get; set; }
+        public NetstormingBookingListRS BookingList { get; set; }
     }
+
+    [XmlRoot("envelope")]
+    public class NetstormingBookingListRS
+    {
+        [XmlElement("header")]
+        public ResponseEnvelopeHeader Header { get; set; }
+
+        [XmlElement("response")]
+        public BookingListEnvelope Response { get; set; }
+
+    }
+
+
+    public class BookingListEnvelope
+    {
+        [XmlAttribute("type")]
+        public string Type { get; set; }
+
+        [XmlAttribute("product")]
+        public string Product { get; set; }
+
+        [XmlText]
+        public string Value { get; set; }
+
+        [XmlElement("services")]
+        public BookingListServices Services { get; set; }
+
+    }
+
+
+    public class BookingListServices
+    {
+        [XmlAttribute("count")]
+        public int Count { get; set; }
+
+        [XmlElement("service")]
+        public List<BookingService> List { get; set; }
+
+    }
+
+
+    public class BookingService
+    {
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+
+        [XmlAttribute("reference")]
+        public string Reference { get; set; }
+
+        [XmlAttribute("status")]
+        public string Status { get; set; }
+
+        [XmlAttribute("checkin")]
+        public string CheckIn { get; set; }
+
+        [XmlAttribute("checkout")]
+        public string CheckOut { get; set; }
+
+        [XmlAttribute("creationdate")]
+        public string CreationDate { get; set; }
+
+        [XmlAttribute("lastmodified")]
+        public string LastModified { get; set; }
+
+        [XmlAttribute("deadline")]
+        public string Deadline { get; set; }
+
+        [XmlAttribute("nett_price")]
+        public decimal NettPrice { get; set; }
+
+        [XmlAttribute("first_nett_price")]
+        public decimal FirstNettPrice { get; set; }
+
+        [XmlAttribute("currency")]
+        public string Currency { get; set; }
+
+        [XmlAttribute("hotel_id")]
+        public string HotelId { get; set; }
+
+        [XmlAttribute("hcn")]
+        public string HCN { get; set; }
+
+    }
+
+
 
     /// <remarks/>
     [System.SerializableAttribute()]

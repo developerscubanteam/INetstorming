@@ -90,11 +90,11 @@ namespace Infrastructure.Connectivity.Connector
                     {
                         checkin = new envelopeQueryCheckin() { date = query.SearchCriteria.CheckInDate },
                         checkout = new envelopeQueryCheckout() { date = query.SearchCriteria.CheckOutDate },
-                        type = "availability",
+                        type = EnvelopeQueryType.availability.ToString(),
                         nationality = query.SearchCriteria.Nationality,
                         hotel = query.SearchCriteria.Accommodations.Select(x => new envelopeQueryHotel() { id = uint.Parse(x) }).ToArray(),
                         filters = new envelopeQueryFilters() { filter = "AVAILONLY" },
-                        product = "hotel",
+                        product = EnvelopeQueryProduct.hotel.ToString(),
                         details = GetAvailRooms(query),
                     }
                 }
@@ -129,10 +129,10 @@ namespace Infrastructure.Connectivity.Connector
                     {
                         checkin = new envelopeQueryCheckin() { date = DateTime.ParseExact(vc.CheckIn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None) },
                         checkout = new envelopeQueryCheckout() { date = DateTime.ParseExact(vc.CheckOut, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None) },
-                        type = "availability",
+                        type = EnvelopeQueryType.availability.ToString(),
                         nationality = vc.Nationality,
                         hotel = hotel,
-                        product = "hotel",
+                        product = EnvelopeQueryProduct.hotel.ToString(),
                         details = GetRoomsFromValCode(vc),
                         search = new envelopeQuerySearch()
                         {
@@ -184,12 +184,12 @@ namespace Infrastructure.Connectivity.Connector
                 {
                     checkin = new envelopeQueryCheckin() { date = DateTime.ParseExact(vc.CheckIn, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None) },
                     checkout = new envelopeQueryCheckout() { date = DateTime.ParseExact(vc.CheckOut, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None) },
-                    type = "book",
+                    type = EnvelopeQueryType.book.ToString(),
                     nationality = vc.Nationality,
                     city = new envelopeQueryCity() { code = bc.City },
                     synchronous = new envelopeQuerySynchronous() { value = true },
                     hotel = hotel,
-                    product = "hotel",
+                    product = EnvelopeQueryProduct.hotel.ToString(),
                     details = getRooms.Item1,
                     reference = new envelopeQueryReference() { code = query.ClientReference },
                     search = new envelopeQuerySearch() { number = bc.SearchNumber },
@@ -215,13 +215,29 @@ namespace Infrastructure.Connectivity.Connector
                         version = ServiceConf.ApiVersion,
                         timestamp = DateTimeExtension.GetTimeStamp()
                     },
-                    query = new CancelEnvelopeQuery()
-                    {
-                        type = "track",
-                        product = "hotel",
-                        booking = new CancelQueryBooking() { name = query.Locator },
-                        //  reference = new CancelQueryReference() { code = locator }
-                    }
+                    query = query.Locator != null ?
+                        new CancelEnvelopeQuery()
+                        {
+                            type = EnvelopeQueryType.track.ToString(),
+                            product = EnvelopeQueryProduct.hotel.ToString(),
+                            booking = new CancelQueryBooking() { name = query.Locator },
+                            //  reference = new CancelQueryReference() { code = locator }
+                        } :
+                        new CancelEnvelopeQuery()
+                        {
+                            type = EnvelopeQueryType.list_services.ToString(),
+                            product = EnvelopeQueryProduct.hotel.ToString(),
+                            creation = query.Dates.Type == DateType.Creation ? new CancelQueryCreation
+                            {
+                                from = query.Dates.From.ToFormat_yyyyMMdd_HHmmss(),
+                                to = query.Dates.To.AddDays(1).AddSeconds(-1).ToFormat_yyyyMMdd_HHmmss()
+                            } : null,
+                            checkin = query.Dates.Type == DateType.Checkin ? new CancelQueryCheckIn
+                            {
+                                from = query.Dates.From.ToFormat_yyyyMMdd_HHmmss(),
+                                to = query.Dates.To.AddDays(1).AddSeconds(-1).ToFormat_yyyyMMdd_HHmmss()
+                            } : null
+                        }
                 }
             };
 
@@ -244,8 +260,8 @@ namespace Infrastructure.Connectivity.Connector
                     },
                     query = new CancelEnvelopeQuery()
                     {
-                        type = "cancel",
-                        product = "hotel",
+                        type = EnvelopeQueryType.cancel.ToString(),
+                        product = EnvelopeQueryProduct.hotel.ToString(),
                         booking = new CancelQueryBooking() { name = query.Locator },
                         //  reference = new CancelQueryReference() { code = locator }
                     }

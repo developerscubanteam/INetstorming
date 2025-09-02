@@ -29,6 +29,11 @@ namespace System
             return date.ToString("yyyy-MM-dd HH:mm");
         }
 
+        public static string ToFormat_yyyyMMdd_HHmmss(this DateTime date)
+        {
+            return date.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+
         public static string ToFormat_yyyyMMdd_HHmmssfff(this DateTime date)
         {
             return date.ToString("yyyy-MM-dd HH:mm:ss.fff");

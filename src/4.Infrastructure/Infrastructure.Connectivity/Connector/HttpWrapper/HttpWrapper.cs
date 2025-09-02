@@ -48,9 +48,6 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
             try
             {
-                if (auditRequests)
-                    auditData.Requests.Add(new Request() { RQ = rqString });
-
                 var client = _httpClientFactory.CreateClient(ServiceConf.ClientName);
                 // client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", connectionData.Token);
                 client.Timeout = TimeSpan.FromMilliseconds(timeout.GetValueOrDefault());
@@ -500,10 +497,23 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
 
                 if (responseMessage.StatusCode == HttpStatusCode.OK)
                 {
-                    var response = responseString.DeserializateObjectToXmlString<NetstormingBookingRS>();
-                    if (response.response.type == "track")
+                    NetstormingBookingRS? response = null;
+                    NetstormingBookingListRS? responseList = null;
+                    if (getRq.GetCancelRq.query.type == EnvelopeQueryType.track.ToString())
+                        response = responseString.DeserializateObjectToXmlString<NetstormingBookingRS>();
+                    else
+                        responseList = responseString.DeserializeXml<NetstormingBookingListRS>();
+
+
+                    if (response?.response.type == EnvelopeQueryType.track.ToString())
                     {
                         bookingRS.Booking = response;
+                        auditRequest.Type = AuditDataType.Ok;
+                        return (bookingRS, null, auditData);
+                    }
+                    else if (responseList?.Response.Type == EnvelopeQueryType.list_services.ToString())
+                    {
+                        bookingRS.BookingList = responseList;
                         auditRequest.Type = AuditDataType.Ok;
                         return (bookingRS, null, auditData);
                     }
@@ -512,7 +522,7 @@ namespace Infrastructure.Connectivities.Iboosy.Connector.HttpWrapper
                         var error = new Message.Common.Error
                         {
                             Code = "500",
-                            Message = response.response.Value
+                            Message = response?.response.Value ?? responseList.Response.Value
                         };
                         auditRequest.Type = AuditDataType.KO;
                         return (null, SupplierError(error), auditData);

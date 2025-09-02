@@ -309,6 +309,12 @@ namespace Ijuniper.test
         public async Task MethodGetBooking()
         {
             var resNo = "B0525156K0"; //
+            var dates = new Dates
+            {
+                From = new DateTime(2025, 7, 22),
+                To = new DateTime(2025, 7, 27),
+                Type = "CheckIn"
+            };
             var clientReference = "";
             //8047080112
             var request = GetRequest("api/Booking/get", "BEDBDDDB5813A41E2B248329CDB4C884B23D0FF4F95C6AA10840B8B761B059F3", HttpMethod.Post);
@@ -328,7 +334,7 @@ namespace Ijuniper.test
                 },
                 //ClientReference = clientReference,
                 BookingId = resNo,
-
+                Dates = dates,
                 Include = new Dictionary<string, List<string>>()
                 {
                     {"accommodations", new(){"name"} },

@@ -734,9 +734,52 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.BookingRQ
 
         private CancelQueryBooking bookingField;
 
+        //Get List
+        private CancelQueryCreation? creationField;
+        private CancelQueryCheckIn? checkInField;
+        private CancelQueryLastModified? lastModifiedField;
+        //
+
         private string typeField;
 
         private string productField;
+
+        /// <remarks/>      
+        public CancelQueryCheckIn? checkin
+        {
+            get
+            {
+                return this.checkInField;
+            }
+            set
+            {
+                this.checkInField = value;
+            }
+        }
+        /// <remarks/>      
+        public CancelQueryLastModified? lastmodified
+        {
+            get
+            {
+                return this.lastModifiedField;
+            }
+            set
+            {
+                this.lastModifiedField = value;
+            }
+        }
+        /// <remarks/>      
+        public CancelQueryCreation? creation
+        {
+            get
+            {
+                return this.creationField;
+            }
+            set
+            {
+                this.creationField = value;
+            }
+        }
 
         /// <remarks/>
         public CancelQueryReference reference
@@ -791,6 +834,36 @@ namespace Infrastructure.Connectivity.Connector.Models.Message.BookingRQ
                 this.productField = value;
             }
         }
+    }
+
+    /// <remarks/>
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+
+    public partial class CancelQueryCreation : BaseFromTo
+    {
+
+    }
+
+    /// <remarks/>
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+
+    public partial class CancelQueryCheckIn : BaseFromTo
+    {
+
+    }
+
+    /// <remarks/>
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+
+    public partial class CancelQueryLastModified : BaseFromTo
+    {
+
     }
 
     /// <remarks/>

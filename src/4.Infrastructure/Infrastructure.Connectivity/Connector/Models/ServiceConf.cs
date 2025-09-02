@@ -7,6 +7,10 @@
         GetDeadLine,
         Booking
     };
+
+    public enum EnvelopeQueryType { availability, book, track, cancel, list_services };
+    public enum EnvelopeQueryProduct { hotel };
+
     public class ServiceConf
     {
         public const string ClientName = "GW";

@@ -308,7 +308,7 @@ namespace Ijuniper.test
         [Test]
         public async Task MethodGetBooking()
         {
-            var resNo = "B0525156K0"; //
+            string resNo = null; // "B0525156K0"; //
             var dates = new Dates
             {
                 From = new DateTime(2025, 7, 22),

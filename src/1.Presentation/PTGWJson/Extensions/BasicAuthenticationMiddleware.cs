@@ -40,7 +40,6 @@ public class BasicAuthenticationMiddleware
 
     private bool RequiresAuthentication(string? uri)
     {
-        return false;
         if (uri != null)
         {
             if (uri == "/api/Probe" || uri == "/api/probe" || uri == "/api/ControlPanel")

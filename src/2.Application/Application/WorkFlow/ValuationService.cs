@@ -47,8 +47,8 @@ namespace Application.WorkFlow
             {
                 var error = new Domain.Error.Error("UncontrolledException", ex.GetFullMessage(), Domain.Error.ErrorType.Error, Domain.Error.CategoryErrorType.Provider);
                 valuation.Errors = [error];
-            }
-            ;
+            };
+
             return valuation;
 
         }
